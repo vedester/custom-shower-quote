@@ -165,3 +165,8 @@ body {
   width: 102.04%; /* 100 / 0.98 */
   overflow-x: hidden;
 }
+
+.quote-summary-card {
+  padding: 0.5rem !important;
+  font-size: 0.85rem !important;
+}

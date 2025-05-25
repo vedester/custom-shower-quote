@@ -122,7 +122,8 @@ function App() {
                     Add to Quote
                   </button>
                   <div id="quote-section" className="mt-1">
-                    <h2 className="text-xs font-bold text-emerald-700 mb-1">Quote Summary</h2>
+                    {/* Remove or comment out the next line */}
+                    {/* <h2 className="text-xs font-bold text-emerald-700 mb-1">Quote Summary</h2> */}
                     <QuoteCalculator
                       customerInfo={customerInfo}
                       formData={formData}
@@ -166,7 +167,7 @@ function App() {
 
                 {/* Add-Ons */}
                 <section className="bg-white/90 shadow rounded-xl p-1 border border-blue-100 min-h-[30px]">
-                  <h2 className="text-xs font-bold text-blue-700 mb-1">Add-Ons</h2>
+                  <h2 className="text-lg font-extrabold text-blue-700 mb-2 text-center w-full">Add-Ons</h2>
                   <div className="overflow-x-auto">
                     <div className="flex gap-1 text-xs">
                       <AddOnsSection
