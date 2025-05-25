@@ -10,7 +10,7 @@
       name="description"
       content="Web site created using create-react-app"
           />
-     <!-- <link href="../src/output.css" rel="stylesheet"> -->
+     <link href="../src/output.css" rel="stylesheet">
     <!-- <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" /> -->
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -29,9 +29,20 @@
     <title>Custom Shower Glass Quote Calculator</title>
   </head>
   <body>
-    
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Google Translate Widget (top right) -->
+    <div id="google_translate_element" style="position: fixed; top: 10px; right: 10px; z-index: 9999;"></div>
     <div id="root"></div>
+    <!-- Google Translate Scripts -->
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'he', // or 'en' if your default is English
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

@@ -2,6 +2,8 @@
 // This component calculates and displays the quote summary for the custom shower glass app.
 
 import React, { useState, useEffect, useMemo } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Default settings (used if adminSettings are not set in localStorage)
 const defaultSettings = {
@@ -47,6 +49,23 @@ const defaultSettings = {
   profitMargin: 0.30,
   companyName: 'Your Glass Company',
   companyEmail: 'info@yourcompany.com'
+};
+
+const modelImages = {
+  'MTI-101': '/images/models/MTI-101.jpg',
+  'MTI-102': '/images/models/MTI-102.jpg',
+  'MTI-103': '/images/models/MTI-103.jpg',
+  'MTI-201': '/images/models/MTI-201.jpg',
+  'MTI-202': '/images/models/MTI-202.jpg',
+  'MTI-203': '/images/models/MTI-203.jpg',
+  'MTI-301': '/images/models/MTI-301.jpg',
+  'MTI-302': '/images/models/MTI-302.jpg',
+  'MTI-401': '/images/models/MTI-401.jpg',
+  'MTI-402': '/images/models/MTI-402.jpg',
+  'MTI-501': '/images/models/MTI-501.jpg',
+  'MTI-502': '/images/models/MTI-502.jpg',
+  'MTI-601': '/images/models/MTI-601.jpg',
+  'MTI-602': '/images/models/MTI-602.jpg',
 };
 
 const QuoteCalculator = ({ customerInfo, formData }) => {
@@ -124,7 +143,7 @@ const QuoteCalculator = ({ customerInfo, formData }) => {
     calculateQuote();
   }, [formData, addOnQuantities, pricing, addOnsConfig]);
 
-  // Generate the quote text for download, email, or sharing
+  // --- PDF GENERATION ---
   const generateQuoteText = () => {
     const allAddOns = Object.entries(addOnQuantities)
       .filter(([addon, qty]) => qty > 0)
@@ -170,28 +189,51 @@ Contact: ${settings.companyEmail}
     `.trim();
   };
 
-  // Download the quote as a .txt file
-  const downloadQuote = () => {
-    const element = document.createElement('a');
-    const file = new Blob([generateQuoteText()], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `quote-${customerInfo.name || 'customer'}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  // Helper to load image as base64
+  const getImageBase64 = (url) =>
+    new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 1.0));
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+
+  // Download the quote as a PDF file (with image)
+  const downloadQuote = async () => {
+    const doc = new jsPDF();
+    let y = 10;
+
+    // Add model image if available
+    if (formData.model && modelImages[formData.model]) {
+      const imgData = await getImageBase64(modelImages[formData.model]);
+      if (imgData) {
+        doc.addImage(imgData, 'JPEG', 10, y, 50, 40);
+        y += 45;
+      }
+    }
+
+    // Add quote text
+    const lines = doc.splitTextToSize(generateQuoteText(), 180);
+    doc.text(lines, 10, y);
+
+    doc.save(`quote-${customerInfo.name || 'customer'}-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // Share quote via WhatsApp
+  // WhatsApp and Email: prompt user to download PDF, as direct file sending is not possible from browser
   const shareWhatsApp = () => {
-    const text = encodeURIComponent(generateQuoteText());
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    alert('Please download the PDF and attach it manually in WhatsApp.');
   };
 
-  // Share quote via Email
   const shareEmail = () => {
-    const subject = encodeURIComponent('Shower Glass Quote - ' + customerInfo.name);
-    const body = encodeURIComponent(generateQuoteText());
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    alert('Please download the PDF and attach it manually to your email.');
   };
 
   // Send quote details to store owner via email
@@ -289,7 +331,7 @@ Customer Photo: ${formData.photo ? 'Attached' : 'Not provided'}
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Download Quote
+              Download PDF
             </button>
             <button
               onClick={shareWhatsApp}
