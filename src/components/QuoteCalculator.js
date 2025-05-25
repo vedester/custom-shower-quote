@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// import html2canvas from 'html2canvas';
 
 // Default settings (used if adminSettings are not set in localStorage)
 const defaultSettings = {
@@ -294,10 +294,10 @@ Customer Photo: ${formData.photo ? 'Attached' : 'Not provided'}
 
       {/* Show quote breakdown if quote is calculated */}
       {quote ? (
-        <div className="space-y-4">
+        <div className="space-y-2"> {/* was space-y-4 */}
           {/* Pricing breakdown */}
-          <div className="bg-blue-50 p-4 rounded-lg shadow-inner">
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="bg-blue-50 p-2 rounded-lg shadow-inner"> {/* was p-4 */}
+            <div className="grid grid-cols-2 gap-1 text-xs"> {/* was gap-2 text-sm */}
               <span className="font-semibold">Area:</span>
               <span className="font-medium">{quote.area} m²</span>
               <span className="font-semibold">Base Price:</span>
@@ -312,64 +312,58 @@ Customer Photo: ${formData.photo ? 'Attached' : 'Not provided'}
           </div>
 
           {/* Final price display */}
-          <div className="bg-green-100 p-4 rounded-lg border-2 border-green-300 shadow-inner">
+          <div className="bg-green-100 p-2 rounded-lg border-2 border-green-300 shadow-inner">
             <div className="text-center">
-              <div className="text-sm text-gray-600">Final Price</div>
-              <div className="text-3xl font-bold text-green-700">${quote.finalPrice}</div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-600">Final Price</div>
+              <div className="text-xl font-bold text-green-700">${quote.finalPrice}</div> {/* was text-3xl */}
+              <div className="text-[10px] text-gray-500 mt-1">
                 Including {Math.round((settings.profitMargin || 0.3) * 100)}% profit margin
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2"> {/* was gap-3 */}
             <button
               onClick={downloadQuote}
-              className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-semibold"
+              className="flex items-center justify-center px-2 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-semibold text-xs" // smaller
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Download PDF
+              PDF
             </button>
             <button
               onClick={shareWhatsApp}
-              className="flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-semibold"
+              className="flex items-center justify-center px-2 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-semibold text-xs"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-              Send via WhatsApp
+              WhatsApp
             </button>
             <button
               onClick={shareEmail}
-              className="flex items-center justify-center px-4 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-semibold"
+              className="flex items-center justify-center px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-semibold text-xs"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              Send via Email
+              Email
             </button>
             <button
               onClick={sendToStoreOwner}
-              className="flex items-center justify-center px-4 py-3 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors font-semibold"
+              className="flex items-center justify-center px-2 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors font-semibold text-xs"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              Send to Store Owner
+              Owner
             </button>
           </div>
-          <button
-            disabled
-            className="w-full flex items-center justify-center px-4 py-3 bg-yellow-500 text-white rounded-md opacity-75 cursor-not-allowed font-semibold mt-2"
-          >
-            💳 Pay Now (Coming Soon)
-          </button>
         </div>
       ) : (
-        <div className="text-center text-gray-500 py-8">
+        <div className="text-center text-gray-500 py-4">
           <p>Fill in the details to see your quote</p>
         </div>
       )}

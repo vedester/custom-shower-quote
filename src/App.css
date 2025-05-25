@@ -5,6 +5,12 @@
   min-height: 100vh;
   background: #f9fafb;
 }
+/* App.css */
+.model-image {
+  max-height: 200px;
+  object-fit: contain;
+  width: 100%;
+}
 
 /* Responsive container */
 .max-w-4xl {
@@ -159,12 +165,7 @@ h1, h2, h3 {
   margin: 1rem auto;
 }
 
-body {
-  transform: scale(0.98);
-  transform-origin: top left;
-  width: 102.04%; /* 100 / 0.98 */
-  overflow-x: hidden;
-}
+
 
 .quote-summary-card {
   padding: 0.5rem !important;
