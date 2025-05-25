@@ -13,10 +13,10 @@ import { useTranslation } from "react-i18next";
 // import PreviewSection from './components/PreviewSection';
 
 const modelImages = {
-  'MTI-101': '/images/models/MTI-101.jpg',
+  'MTI-101': '/images/models/MTI-101.jpeg',
   'MTI-102': '/images/models/MTI-102.jpg',
   'MTI-103': '/images/models/MTI-103.jpg',
-  'MTI-201': '/images/models/MTI-201.jpg',
+  'MTI-201': '/images/models/MTI-201.jpeg',
   'MTI-202': '/images/models/MTI-202.jpg',
   'MTI-203': '/images/models/MTI-203.jpg',
   'MTI-301': '/images/models/MTI-301.jpg',
@@ -115,23 +115,19 @@ function App() {
 
                 {/* Quote Summary */}
                 <section className="bg-white/95 shadow rounded-xl p-1 border border-emerald-100 flex flex-col min-h-[60px]">
-                  {canQuote && (
-                    <button
-                      onClick={handleAddToQuote}
-                      className="w-full mb-1 px-2 py-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold rounded shadow text-xs"
-                    >
-                      Add to Quote
-                    </button>
-                  )}
-                  {quoteReady && (
-                    <div id="quote-section" className="mt-1">
-                      <h2 className="text-xs font-bold text-emerald-700 mb-1">Quote Summary</h2>
-                      <QuoteCalculator
-                        customerInfo={customerInfo}
-                        formData={formData}
-                      />
-                    </div>
-                  )}
+                  <button
+                    onClick={handleAddToQuote}
+                    className="w-full mb-1 px-2 py-1 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold rounded shadow text-xs"
+                  >
+                    Add to Quote
+                  </button>
+                  <div id="quote-section" className="mt-1">
+                    <h2 className="text-xs font-bold text-emerald-700 mb-1">Quote Summary</h2>
+                    <QuoteCalculator
+                      customerInfo={customerInfo}
+                      formData={formData}
+                    />
+                  </div>
                 </section>
               </div>
 

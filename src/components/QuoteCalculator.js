@@ -52,10 +52,10 @@ const defaultSettings = {
 };
 
 const modelImages = {
-  'MTI-101': '/images/models/MTI-101.jpg',
+  'MTI-101': '/images/models/MTI-101.jpeg',
   'MTI-102': '/images/models/MTI-102.jpg',
   'MTI-103': '/images/models/MTI-103.jpg',
-  'MTI-201': '/images/models/MTI-201.jpg',
+  'MTI-201': '/images/models/MTI-201.jpeg',
   'MTI-202': '/images/models/MTI-202.jpg',
   'MTI-203': '/images/models/MTI-203.jpg',
   'MTI-301': '/images/models/MTI-301.jpg',

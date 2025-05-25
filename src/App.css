@@ -158,3 +158,10 @@ h1, h2, h3 {
   height: 3rem;
   margin: 1rem auto;
 }
+
+body {
+  transform: scale(0.98);
+  transform-origin: top left;
+  width: 102.04%; /* 100 / 0.98 */
+  overflow-x: hidden;
+}
