@@ -6,13 +6,19 @@ export default function Contact() {
       <img src="/logo.jpeg" alt="Company Logo" className="h-16 mx-auto mb-4" />
       <h2 className="text-2xl font-bold mb-2 text-gray-800">Contact Us</h2>
       <p className="text-gray-600 mb-1">
-        Phone: <a href="tel:0745389833" className="text-blue-600 underline">0745389833</a>
+        Phone: <a href="tel:+97248406047" className="text-blue-600 underline">+97248406047</a>
       </p>
       <p className="text-gray-600 mb-1">
-        Email: <a href="vedester@gmail.com" className="text-blue-600 underline">info@yourcompany.com</a>
+        Email: <a href="mailto:vedester@gmail.com" className="text-blue-600 underline">info@yourcompany.com</a>
+      </p>
+      <p className="text-gray-600 mb-1">
+        Web: <a href="https://www.shoc.co.il" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.shoc.co.il</a>
+      </p>
+      <p className="text-gray-600 mb-1">
+        International Phone: <a href="tel:+97248406047" className="text-blue-600 underline">+97248406047</a>
       </p>
       <a
-        href="https://wa.me/254745389833"
+        href="https://wa.me/+97248406047"
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center mt-4 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition"
