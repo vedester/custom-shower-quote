@@ -205,7 +205,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
       </div>
 
       {/* Only keep photo upload here */}
-      <div>
+      {/* <div>
         <label htmlFor="photo-upload" className="text-sm font-medium text-gray-700 mb-1 block">Upload Shower Photo (Optional)</label>
         <div className="flex items-center">
           <input
@@ -226,9 +226,9 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
             {formData.photo ? formData.photo.name : 'Choose Photo'}
           </label>
         </div>
-      </div>
+      </div> */}
 
-      {formData.photo && (
+      {/* {formData.photo && (
         <div className="mt-3">
           <img
             src={URL.createObjectURL(formData.photo)}
@@ -236,7 +236,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
             className="w-full max-w-xs rounded-xl border border-gray-200 shadow"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
