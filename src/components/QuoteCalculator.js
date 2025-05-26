@@ -25,8 +25,8 @@ const defaultSettings = {
     'Additional Seals': { price: 80, quantity: true }
   },
   profitMargin: 0.30,
-  companyName: 'Your Glass Company',
-  companyEmail: 'info@yourcompany.com',
+  companyName: 'Custom Shower Glass Quote Calculator',
+  companyEmail: 'maordh@gmail.com',
   companyPhone: '+97248406047' // <-- Replace with your actual number
 };
 
@@ -214,42 +214,40 @@ Contact: ${settings.companyEmail}
     URL.revokeObjectURL(url);
   };
 
-  // WhatsApp: Instruct user to attach the PDF
+  // WhatsApp: Directly contact owner with quote in message
   const shareWhatsApp = async () => {
-    const { url } = await generatePdfBlob();
+    // Owner's WhatsApp number, no plus, with country code
+    const ownerNumber = "97248406047";
     const msg = encodeURIComponent(
-      "Please download and attach the PDF file to this message.\n\n" +
-      generateQuoteText() +
-      `\n\nPDF download link: ${window.location.origin + url}`
+      "Hello, I am interested in a custom shower glass quote. Here are my details:\n\n" +
+      generateQuoteText()
     );
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
+    window.open(`https://wa.me/${ownerNumber}?text=${msg}`, '_blank');
   };
 
-  // Email: Instruct user to attach the PDF
+  // Email: Directly contact owner with quote in message
   const shareEmail = async () => {
-    const { url } = await generatePdfBlob();
+    const ownerEmail = settings.companyEmail || "maordh@gmail.com";
     const subject = encodeURIComponent("My Custom Shower Quote");
     const body = encodeURIComponent(
-      "Please download and attach the PDF file to this email.\n\n" +
-      generateQuoteText() +
-      `\n\nPDF download link: ${window.location.origin + url}`
+      "Hello, I am interested in your custom shower glass service. Here are my details:\n\n" +
+      generateQuoteText()
     );
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    window.open(`mailto:${ownerEmail}?subject=${subject}&body=${body}`, '_blank');
   };
-
   // Owner: Instruct user to attach the PDF, and show owner number
-  const sendToStoreOwner = async () => {
-    const { url } = await generatePdfBlob();
-    const storeEmail = settings.companyEmail;
-    const ownerNumber = settings.companyPhone;
-    const subject = encodeURIComponent('New Quote Request - ' + customerInfo.name);
-    const body = encodeURIComponent(
-      "Please download and attach the PDF file to this email to the store owner.\n\n" +
-      `New quote request received:\n\n${generateQuoteText()}\n\nPDF download link: ${window.location.origin + url}\n\nCustomer Photo: ${formData.photo ? 'Attached' : 'Not provided'}`
-    );
-    window.open(`mailto:${storeEmail}?subject=${subject}&body=${body}`, '_blank');
-    alert(`Quote details sent to store! We will contact you soon.\n\nHere is the owner number:\n${ownerNumber}`);
-  };
+  // const sendToStoreOwner = async () => {
+  //   const { url } = await generatePdfBlob();
+  //   const storeEmail = settings.companyEmail;
+  //   const ownerNumber = settings.companyPhone;
+  //   const subject = encodeURIComponent('New Quote Request - ' + customerInfo.name);
+  //   const body = encodeURIComponent(
+  //     "Please download and attach the PDF file to this email to the store owner.\n\n" +
+  //     `New quote request received:\n\n${generateQuoteText()}\n\nPDF download link: ${window.location.origin + url}\n\nCustomer Photo: ${formData.photo ? 'Attached' : 'Not provided'}`
+  //   );
+  //   window.open(`mailto:${storeEmail}?subject=${subject}&body=${body}`, '_blank');
+  //   alert(`Quote details sent to store! We will contact you soon.\n\nHere is the owner number:\n${ownerNumber}`);
+  // };
 
   useEffect(() => {
     // Clean up blob URL on unmount
@@ -292,24 +290,11 @@ Contact: ${settings.companyEmail}
   // ----------- UPDATED TAILWIND SECTION BELOW -----------
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      {/* <h2 className="text-xl font-bold mb-6 text-center text-blue-800 tracking-wide">Quote Summary</h2> */}
-      {renderAddOnsSummary && (
-        <div className="mb-4">
-          {renderAddOnsSummary()}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {/* Info/notice section */}
-        {/* <div className="bg-blue-50 p-3 rounded-lg shadow-inner text-center text-blue-700 text-sm font-medium min-h-[40px] flex items-center justify-center">
-          {quote
-            ? <span className="w-full text-center">Please review your quote below.</span>
-            : <span className="w-full text-center text-gray-400 italic">Fill in the details to see your quote</span>
-          }
-        </div> */}
-
+      {/* <h2 className="text-xl font-bold mb-4 text-center text-blue-800 tracking-wide">Quote Summary</h2> */}
+      {renderAddOnsSummary()}
+      <div className="space-y-2">
         {/* Final Price section */}
-        <div className="bg-green-100 p-4 rounded-lg border-2 border-green-300 shadow-inner">
+        <div className="bg-green-100 p-2 rounded-lg border-2 border-green-300 shadow-inner">
           <div className="text-center">
             <div className="text-xs text-gray-600 uppercase tracking-wider">Final Price</div>
             <div className="text-2xl font-extrabold text-green-700 my-1">
@@ -320,16 +305,16 @@ Contact: ${settings.companyEmail}
             </div>
           </div>
         </div>
-
         {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 mt-2">
           <button
             onClick={downloadQuote}
             className="flex items-center justify-center px-2 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-semibold text-xs shadow disabled:opacity-60"
             title="Download PDF"
             disabled={!quote}
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* PDF Icon */}
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Download PDF
@@ -340,46 +325,44 @@ Contact: ${settings.companyEmail}
             title="Download TXT"
             disabled={!quote}
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* TXT Icon */}
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l-3-3m3 3l3-3m-6 5h6" />
             </svg>
             Download TXT
           </button>
+        </div>
+        {/* Communication buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-4 justify-center">
+          {/* WhatsApp Button */}
           <button
             onClick={shareWhatsApp}
-            className="flex items-center justify-center px-2 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-semibold text-xs shadow disabled:opacity-60"
-            title="Send via WhatsApp"
+            className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md shadow font-semibold text-sm transition-colors disabled:opacity-60"
+            title="Contact via WhatsApp"
             disabled={!quote}
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            {/* WhatsApp Professional Logo */}
+            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="16" fill="#25D366"/>
+              <path d="M24.1 20.8c-.3-.1-1.7-.8-2-1-0.3-.1-.5-.2-.8.2-.2.3-.7 1-1 1.2-.2.2-.4.2-.7.1-.3-.1-1.2-.5-2.4-1.4-1.2-1-2-2.3-2.2-2.6-.2-.3-.1-.5.1-.7.1-.2.3-.4.5-.6.2-.2.2-.3.3-.5.1-.2.1-.4 0-.6-.1-.2-.7-1.6-.9-2.2-.2-.5-.5-.4-.7-.4l-.6-.01c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.1 0 1.2.8 2.6 1 2.8.1.2 1.7 2.6 4.1 3.6.6.2 1.1.4 1.4.5.6.2 1.1.1 1.5.1.5-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z" fill="#fff"/>
             </svg>
-            WhatsApp
+            WhatsApp Owner
           </button>
+          {/* Email Button */}
           <button
             onClick={shareEmail}
-            className="flex items-center justify-center px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-semibold text-xs shadow disabled:opacity-60"
-            title="Send via Email"
+            className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow font-semibold text-sm transition-colors disabled:opacity-60"
+            title="Contact via Email"
             disabled={!quote}
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            {/* Email Professional Logo */}
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <rect width="20" height="14" x="2" y="5" rx="2" fill="#2563EB"/>
+              <path stroke="#fff" strokeWidth={2} d="M22 7l-10 7L2 7"/>
             </svg>
-            Email
-          </button>
-          <button
-            onClick={sendToStoreOwner}
-            className="flex items-center justify-center px-2 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors font-semibold text-xs shadow col-span-2 disabled:opacity-60"
-            title="Send to Owner"
-            disabled={!quote}
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Owner
+            Email Owner
           </button>
         </div>
-
         {/* Last PDF download link */}
         {pdfUrl && (
           <div className="text-xs mt-2 text-center">

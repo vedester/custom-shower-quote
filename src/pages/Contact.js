@@ -9,7 +9,7 @@ export default function Contact() {
         Phone: <a href="tel:+97248406047" className="text-blue-600 underline">+97248406047</a>
       </p>
       <p className="text-gray-600 mb-1">
-        Email: <a href="mailto:vedester@gmail.com" className="text-blue-600 underline">info@yourcompany.com</a>
+        Email: <a href="mailto:maordh@gmail.com" className="text-blue-600 underline">maordh@gmail.com</a>
       </p>
       <p className="text-gray-600 mb-1">
         Web: <a href="https://www.shoc.co.il" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.shoc.co.il</a>
