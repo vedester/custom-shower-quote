@@ -1,173 +1,35 @@
-/* App.css */
-/* General App styles */
-.App {
-  text-align: center;
-  min-height: 100vh;
-  background: #f9fafb;
-}
-/* App.css */
+/* Remove or comment out these (they conflict with Tailwind):
+.bg-white { ... }
+.p-6, .py-8, .mb-6 { ... }
+.grid { ... }
+.rounded-xl { ... }
+.shadow-md { ... }
+.shadow-lg { ... }
+.bg-blue-50 { ... }
+...
+*/
+
+/* Only keep truly unique, non-Tailwind class names: */
+
+
 .model-image {
   max-height: 200px;
   object-fit: contain;
   width: 100%;
 }
 
-/* Responsive container */
-.max-w-4xl {
-  max-width: 64rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Responsive padding */
-@media (max-width: 768px) {
-  .max-w-4xl {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-}
-
-/* Button styles */
-button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 1rem 1.5rem;
-  border: none;
-  cursor: pointer;
-  border-radius: 0.75rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: background 0.2s;
-}
-
-button:hover:not(:disabled) {
-  background-color: #45a049;
-}
-
-/* Disabled button */
-button:disabled,
-button[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Responsive grid for forms and quote */
-.grid {
-  display: grid;
-  gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-  .lg\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.5rem;
-  }
-}
-
-/* Responsive input fields */
-input, select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  font-size: 1.05rem;
-  margin-top: 0.25rem;
-  margin-bottom: 0.5rem;
-  box-sizing: border-box;
-}
-
-input:focus, select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px #bfdbfe;
-}
-
-/* Responsive font sizes */
-h1, h2, h3 {
-  word-break: break-word;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-@media (max-width: 640px) {
-  h1 {
-    font-size: 1.5rem;
-  }
-  h2 {
-    font-size: 1.125rem;
-  }
-  .p-6, .mb-6, .py-8 {
-    padding: 1rem !important;
-    margin-bottom: 1rem !important;
-  }
-}
-
-/* Make sure forms and summary are scrollable on small screens */
-@media (max-width: 480px) {
-  .bg-white {
-    padding: 0.5rem !important;
-  }
-  .p-6, .p-8 {
-    padding: 0.75rem !important;
-  }
-  h1 {
-    font-size: 1.25rem;
-  }
-  h2 {
-    font-size: 1rem;
-  }
-}
-
-/* Card styles */
-.bg-white {
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
-  padding: 2rem;
-}
-
-@media (max-width: 640px) {
-  .bg-white {
-    padding: 1rem !important;
-    border-radius: 0.75rem;
-  }
-}
-
-.bg-blue-50 {
-  background: #eff6ff;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-}
-
-.bg-green-100 {
-  background: #d1fae5;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-}
-
-/* Drag and Drop Area styles */
-.drag-drop-area {
-  border: 2px dashed #cbd5e1;
-  border-radius: 0.75rem;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.drag-drop-area:hover {
-  border-color: #2563eb;
-}
-
-/* Logo styles */
 .logo {
   height: 3rem;
   margin: 1rem auto;
 }
 
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  font-size: 13px;
+}
 
-
-.quote-summary-card {
-  padding: 0.5rem !important;
-  font-size: 0.85rem !important;
+img {
+  border-radius: 8px;
 }

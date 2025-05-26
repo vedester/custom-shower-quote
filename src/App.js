@@ -1,40 +1,62 @@
-//src/components/App.js
-import React, { useState } from 'react';
+// Main entry for the app with routing and UI layout
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QuoteCalculator from './components/QuoteCalculator';
 import ShowerConfigurator from './components/ShowerConfigurator';
 import AddOnsSection from './components/AddOnsSection';
 import Contact from "./pages/Contact";
-import './App.css';
-import './i18n/i18n';
+import './App.css'; // Optional general styles
+import './i18n/i18n'; // i18n config
 import { useTranslation } from "react-i18next";
+import './output.css'; // or whatever path you used for -o
 
+// Dictionary for model images
 const modelImages = {
+  // Format: 'model_code': 'image_path'
   'MTI-101': '/images/models/MTI-101.jpeg',
   'MTI-102': '/images/models/MTI-102.jpg',
   'MTI-103': '/images/models/MTI-103.jpg',
   'MTI-201': '/images/models/MTI-201.jpeg',
-  'MTI-202': '/images/models/MTI-202.jpg',
-  'MTI-203': '/images/models/MTI-203.jpg',
-  'MTI-301': '/images/models/MTI-301.jpg',
-  'MTI-302': '/images/models/MTI-302.jpg',
-  'MTI-401': '/images/models/MTI-401.jpg',
-  'MTI-402': '/images/models/MTI-402.jpg',
-  'MTI-501': '/images/models/MTI-501.jpg',
-  'MTI-502': '/images/models/MTI-502.jpg',
-  'MTI-601': '/images/models/MTI-601.jpg',
-  'MTI-602': '/images/models/MTI-602.jpg',
+  // ... other models ...
 };
 
 function App() {
   const { t } = useTranslation();
+
+  // Google Translate widget loader (top left of title card)
+ useEffect(() => {
+  if (window.google && window.google.translate) {
+    window.googleTranslateElementInit && window.googleTranslateElementInit();
+    return;
+  }
+  if (document.getElementById('google-translate-script')) return;
+
+  window.googleTranslateElementInit = function () {
+    new window.google.translate.TranslateElement({
+      pageLanguage: 'en',
+      includedLanguages: 'he,en,ar,ru',
+      layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+  };
+
+  const script = document.createElement('script');
+  script.id = 'google-translate-script';
+  script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  script.async = true;
+  document.body.appendChild(script);
+}, []);
+
+  // Customer form data
   const [customerInfo, setCustomerInfo] = useState({ name: '', city: '', phone: '' });
+
+  // Quote form configuration
   const [formData, setFormData] = useState({
     showerType: '', model: '', glassType: '', glassThickness: '8',
     hardwareFinish: 'Nickel', height: '', width: '', length: '',
     addOnQuantities: {}, customAddon: '', photo: null
   });
 
+  // Handlers for form updates
   const handleCustomerChange = (field, value) =>
     setCustomerInfo(prev => ({ ...prev, [field]: value }));
 
@@ -46,12 +68,18 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 py-4 px-2 lg:px-10 text-[90%]">
-            {/* Header */}
+            {/* === HEADER / TOP CARD === */}
             <div className="w-full max-w-7xl mx-auto mb-4">
-              <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center justify-between px-4 py-3">
+              <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center justify-between px-4 py-3 relative">
+                {/* Google Translate Widget - top left, professional look */}
+                <div className="absolute left-4 top-3 z-10 flex items-center">
+                  <span className="text-xs text-gray-500 mr-1 hidden sm:inline">🌐</span>
+                  <div id="google_translate_element" />
+                </div>
+                {/* Title Card Content */}
                 <div className="flex-1 text-center">
-                  <h1 className="text-2xl font-bold text-blue-800 mb-1">{t('title')}</h1>
-                  <p className="text-sm text-gray-600">{t('subtitle')}</p>
+                  <h1 className="text-2xl font-bold text-blue-800 mb-1">{t('title') || "Custom Shower Glass Quote Calculator"}</h1>
+                  <p className="text-sm text-gray-600">{t('subtitle') || "Get instant pricing for beautiful custom shower enclosures"}</p>
                 </div>
                 <div className="mt-3 md:mt-0">
                   <Link
@@ -67,11 +95,12 @@ function App() {
               </div>
             </div>
 
-            {/* Main Content */}
+            {/* === MAIN CONTENT AREA === */}
             <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Left Column: Form */}
+              {/* LEFT COLUMN */}
               <div className="flex flex-col gap-4">
-                {/* Customer Info */}
+                
+                {/* CUSTOMER INFO CARD */}
                 <div className="bg-white shadow rounded-xl p-4">
                   <h2 className="text-lg font-semibold text-blue-700 mb-2">Customer Info</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -93,7 +122,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Shower Configurator */}
+                {/* SHOWER CONFIGURATOR CARD */}
                 <div className="bg-white shadow rounded-xl p-4">
                   <ShowerConfigurator
                     formData={formData}
@@ -101,7 +130,7 @@ function App() {
                   />
                 </div>
 
-                {/* Add-Ons */}
+                {/* ADD-ONS CARD */}
                 <div className="bg-white shadow rounded-xl p-4">
                   <h2 className="text-lg font-semibold text-blue-700 mb-2">Add-Ons</h2>
                   <AddOnsSection
@@ -111,9 +140,9 @@ function App() {
                 </div>
               </div>
 
-              {/* Right Column: Model Image + Quote Summary */}
+              {/* RIGHT COLUMN */}
               <div className="flex flex-col gap-4">
-                {/* Model Image */}
+                {/* MODEL IMAGE PREVIEW CARD */}
                 <div className="bg-white shadow rounded-xl p-4 flex items-center justify-center h-[200px]">
                   {formData.model && modelImages[formData.model] ? (
                     <img
@@ -126,7 +155,7 @@ function App() {
                   )}
                 </div>
 
-                {/* Quote Summary */}
+                {/* QUOTE SUMMARY CARD */}
                 <div className="bg-white shadow rounded-xl p-4">
                   <div id="quote-section">
                     <QuoteCalculator customerInfo={customerInfo} formData={formData} />
@@ -136,6 +165,8 @@ function App() {
             </div>
           </div>
         } />
+
+        {/* CONTACT PAGE ROUTE */}
         <Route path="/contact" element={<Contact />} />
       </Routes>
     </Router>

@@ -1,6 +1,7 @@
 //src/components/AddOnsSection.js
 import React, { useState, useEffect } from 'react';
 
+
 const addOns = [
   { id: 'Towel Handle', label: 'Towel Handle', price: 150 },
   { id: 'Nano Coating', label: 'Nano Coating', price: 200 },
