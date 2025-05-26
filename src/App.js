@@ -7,6 +7,7 @@ import Contact from "./pages/Contact";
 import './App.css'; // Optional general styles
 import './i18n/i18n'; // i18n config
 import { useTranslation } from "react-i18next";
+//import { testTranslation } from '../utils/apifyTranslateTest';
 
 // Dictionary for model images
 const modelImages = {
@@ -71,12 +72,12 @@ function App() {
               {/* RIGHT COLUMN - NOW FIRST */}
               <div className="flex flex-col gap-4">
                 {/* MODEL IMAGE PREVIEW CARD */}
-                <div className="bg-white shadow rounded-xl p-4 flex items-center justify-center h-[200px]">
+                <div className="bg-white shadow rounded-xl p-4 flex items-center justify-center h-[400px]">
                   {formData.model && modelImages[formData.model] ? (
                     <img
                       src={modelImages[formData.model]}
                       alt={formData.model}
-                      className="w-full h-[200px] object-contain"
+                      className="w-full h-[400px] object-contain"
                     />
                   ) : (
                     <div className="text-gray-400 text-sm text-center">No Model Selected</div>
@@ -84,7 +85,7 @@ function App() {
                 </div>
 
                 {/* QUOTE SUMMARY CARD */}
-                <div className="bg-white shadow rounded-xl p-4">
+                <div className="bg-white shadow rounded-xl p-2">
                   <div id="quote-section">
                     <QuoteCalculator customerInfo={customerInfo} formData={formData} />
                   </div>

@@ -63,12 +63,12 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-4 space-y-2 border border-gray-200">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-2 space-y-4 border border-gray-200">
       <select
         id="showerType"
         value={formData.showerType}
         onChange={(e) => onFormChange('showerType', e.target.value)}
-        className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
+        className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
         <option value="" disabled>Shower Type</option>
         {showerTypes.map(type => (
@@ -80,7 +80,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         id="model"
         value={formData.model}
         onChange={(e) => onFormChange('model', e.target.value)}
-        className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
+        className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
         disabled={!formData.showerType}
       >
         <option value="" disabled>{formData.showerType ? 'Model' : 'Select shower type first'}</option>
@@ -93,7 +93,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         id="glassType"
         value={formData.glassType}
         onChange={(e) => onFormChange('glassType', e.target.value)}
-        className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
+        className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
         <option value="" disabled>Glass Type</option>
         {glassTypes.map(type => (
@@ -105,7 +105,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         id="glassThickness"
         value={formData.glassThickness}
         onChange={(e) => onFormChange('glassThickness', e.target.value)}
-        className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
+        className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
         <option value="" disabled>Glass Thickness</option>
         <option value="6">6 mm</option>
@@ -135,7 +135,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           value={formData.height}
           onChange={(e) => onFormChange('height', e.target.value)}
           placeholder="Height (m)"
-          className={`w-full p-2 border ${height > MAX_HEIGHT ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
+          className={`w-full p-3 border ${height > MAX_HEIGHT ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
         <input
           id="width"
@@ -146,7 +146,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           value={formData.width}
           onChange={(e) => onFormChange('width', e.target.value)}
           placeholder="Width (m)"
-          className={`w-full p-2 border ${width > MAX_WIDTH ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
+          className={`w-full p-3 border ${width > MAX_WIDTH ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
         {formData.showerType === 'Corner' && (
           <input
@@ -157,7 +157,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
             value={formData.length}
             onChange={(e) => onFormChange('length', e.target.value)}
             placeholder="Length (m)"
-            className="w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm col-span-2"
+            className="w-full p-3 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm col-span-2"
           />
         )}
       </div>

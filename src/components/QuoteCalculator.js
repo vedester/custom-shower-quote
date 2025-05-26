@@ -292,7 +292,7 @@ Contact: ${settings.companyEmail}
   // ----------- UPDATED TAILWIND SECTION BELOW -----------
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-6 text-center text-blue-800 tracking-wide">Quote Summary</h2>
+      {/* <h2 className="text-xl font-bold mb-6 text-center text-blue-800 tracking-wide">Quote Summary</h2> */}
       {renderAddOnsSummary && (
         <div className="mb-4">
           {renderAddOnsSummary()}
@@ -301,12 +301,12 @@ Contact: ${settings.companyEmail}
 
       <div className="space-y-4">
         {/* Info/notice section */}
-        <div className="bg-blue-50 p-3 rounded-lg shadow-inner text-center text-blue-700 text-sm font-medium min-h-[40px] flex items-center justify-center">
+        {/* <div className="bg-blue-50 p-3 rounded-lg shadow-inner text-center text-blue-700 text-sm font-medium min-h-[40px] flex items-center justify-center">
           {quote
             ? <span className="w-full text-center">Please review your quote below.</span>
             : <span className="w-full text-center text-gray-400 italic">Fill in the details to see your quote</span>
           }
-        </div>
+        </div> */}
 
         {/* Final Price section */}
         <div className="bg-green-100 p-4 rounded-lg border-2 border-green-300 shadow-inner">
