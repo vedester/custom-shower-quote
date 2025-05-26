@@ -289,89 +289,110 @@ Contact: ${settings.companyEmail}
     // );
   };
 
+  // ----------- UPDATED TAILWIND SECTION BELOW -----------
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4 text-center">Quote Summary</h2>
-      {renderAddOnsSummary()}
-      {quote ? (
-        <div className="space-y-2">
-          <div className="bg-blue-50 p-2 rounded-lg shadow-inner">
-          
-          </div>
-          <div className="bg-green-100 p-2 rounded-lg border-2 border-green-300 shadow-inner">
-            <div className="text-center">
-              <div className="text-xs text-gray-600">Final Price</div>
-              <div className="text-xl font-bold text-green-700">${quote.finalPrice}</div>
-              <div className="text-[10px] text-gray-500 mt-1">
-                Including {Math.round((settings.profitMargin || 0.3) * 100)}% profit margin
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={downloadQuote}
-              className="flex items-center justify-center px-2 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-semibold text-xs"
-              title="Download PDF"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download PDF
-            </button>
-            <button
-              onClick={downloadTxt}
-              className="flex items-center justify-center px-2 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-semibold text-xs"
-              title="Download TXT"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l-3-3m3 3l3-3m-6 5h6" />
-              </svg>
-              Download TXT
-            </button>
-            <button
-              onClick={shareWhatsApp}
-              className="flex items-center justify-center px-2 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-semibold text-xs"
-              title="Send via WhatsApp"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              WhatsApp
-            </button>
-            <button
-              onClick={shareEmail}
-              className="flex items-center justify-center px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-semibold text-xs"
-              title="Send via Email"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Email
-            </button>
-            <button
-              onClick={sendToStoreOwner}
-              className="flex items-center justify-center px-2 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors font-semibold text-xs col-span-2"
-              title="Send to Owner"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Owner
-            </button>
-          </div>
-          {pdfUrl && (
-            <div className="text-xs mt-2 text-center">
-              <a href={pdfUrl} download={`quote-${customerInfo.name || 'customer'}-${new Date().toISOString().split('T')[0]}.pdf`} className="underline text-blue-600">
-                Download last generated PDF
-              </a>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="text-center text-gray-500 py-4">
-          <p>Fill in the details to see your quote</p>
+      <h2 className="text-xl font-bold mb-6 text-center text-blue-800 tracking-wide">Quote Summary</h2>
+      {renderAddOnsSummary && (
+        <div className="mb-4">
+          {renderAddOnsSummary()}
         </div>
       )}
+
+      <div className="space-y-4">
+        {/* Info/notice section */}
+        <div className="bg-blue-50 p-3 rounded-lg shadow-inner text-center text-blue-700 text-sm font-medium min-h-[40px] flex items-center justify-center">
+          {quote
+            ? <span className="w-full text-center">Please review your quote below.</span>
+            : <span className="w-full text-center text-gray-400 italic">Fill in the details to see your quote</span>
+          }
+        </div>
+
+        {/* Final Price section */}
+        <div className="bg-green-100 p-4 rounded-lg border-2 border-green-300 shadow-inner">
+          <div className="text-center">
+            <div className="text-xs text-gray-600 uppercase tracking-wider">Final Price</div>
+            <div className="text-2xl font-extrabold text-green-700 my-1">
+              {quote ? `$${quote.finalPrice}` : '$0.00'}
+            </div>
+            <div className="text-[10px] text-gray-500 mt-1">
+              Including {Math.round((settings.profitMargin || 0.3) * 100)}% profit margin
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={downloadQuote}
+            className="flex items-center justify-center px-2 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-semibold text-xs shadow disabled:opacity-60"
+            title="Download PDF"
+            disabled={!quote}
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download PDF
+          </button>
+          <button
+            onClick={downloadTxt}
+            className="flex items-center justify-center px-2 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-semibold text-xs shadow disabled:opacity-60"
+            title="Download TXT"
+            disabled={!quote}
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l-3-3m3 3l3-3m-6 5h6" />
+            </svg>
+            Download TXT
+          </button>
+          <button
+            onClick={shareWhatsApp}
+            className="flex items-center justify-center px-2 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-semibold text-xs shadow disabled:opacity-60"
+            title="Send via WhatsApp"
+            disabled={!quote}
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            WhatsApp
+          </button>
+          <button
+            onClick={shareEmail}
+            className="flex items-center justify-center px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-semibold text-xs shadow disabled:opacity-60"
+            title="Send via Email"
+            disabled={!quote}
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Email
+          </button>
+          <button
+            onClick={sendToStoreOwner}
+            className="flex items-center justify-center px-2 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors font-semibold text-xs shadow col-span-2 disabled:opacity-60"
+            title="Send to Owner"
+            disabled={!quote}
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Owner
+          </button>
+        </div>
+
+        {/* Last PDF download link */}
+        {pdfUrl && (
+          <div className="text-xs mt-2 text-center">
+            <a
+              href={pdfUrl}
+              download={`quote-${customerInfo.name || 'customer'}-${new Date().toISOString().split('T')[0]}.pdf`}
+              className="underline text-blue-600 hover:text-blue-900 font-medium"
+            >
+              Download last generated PDF
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
