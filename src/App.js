@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QuoteCalculator from './components/QuoteCalculator';
 import ShowerConfigurator from './components/ShowerConfigurator';
@@ -19,29 +19,6 @@ const modelImages = {
 
 function App() {
   const { t } = useTranslation();
-
-  // Google Translate widget loader (top left of title card)
-  useEffect(() => {
-    if (window.google && window.google.translate) {
-      window.googleTranslateElementInit && window.googleTranslateElementInit();
-      return;
-    }
-    if (document.getElementById('google-translate-script')) return;
-
-    window.googleTranslateElementInit = function () {
-      new window.google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,he,ar,ru',
-        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-      }, 'google_translate_element');
-    };
-
-    const script = document.createElement('script');
-    script.id = 'google-translate-script';
-    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   // Customer form data
   const [customerInfo, setCustomerInfo] = useState({ name: '', city: '', phone: '' });
@@ -69,11 +46,7 @@ function App() {
             {/* === HEADER / TOP CARD === */}
             <div className="w-full max-w-7xl mx-auto mb-8">
               <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center justify-between px-4 py-3 relative">
-                {/* Google Translate Widget - top left, professional look */}
-                <div className="absolute left-1 top-1 z-10 flex items-center max-w-[72px] sm:max-w-none">
-                  <span className="text-xs text-gray-500 mr-1 hidden sm:inline">🌐</span>
-                  <div id="google_translate_element" className="scale-75 sm:scale-100 origin-top-left" />
-                </div>
+                {/* Removed Google Translate Widget */}
                 {/* Title Card Content */}
                 <div className="flex-1 text-center">
                   <h1 className="text-2xl font-bold text-blue-800 mb-1">{t('title') || "Custom Shower Glass Quote Calculator"}</h1>
