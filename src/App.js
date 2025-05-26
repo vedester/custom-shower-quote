@@ -24,27 +24,27 @@ function App() {
   const { t } = useTranslation();
 
   // Google Translate widget loader (top left of title card)
- useEffect(() => {
-  if (window.google && window.google.translate) {
-    window.googleTranslateElementInit && window.googleTranslateElementInit();
-    return;
-  }
-  if (document.getElementById('google-translate-script')) return;
+  useEffect(() => {
+    if (window.google && window.google.translate) {
+      window.googleTranslateElementInit && window.googleTranslateElementInit();
+      return;
+    }
+    if (document.getElementById('google-translate-script')) return;
 
-  window.googleTranslateElementInit = function () {
-    new window.google.translate.TranslateElement({
-      pageLanguage: 'en',
-      includedLanguages: 'he,en,ar,ru',
-      layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
-  };
+    window.googleTranslateElementInit = function () {
+      new window.google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,he,ar,ru',
+        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    };
 
-  const script = document.createElement('script');
-  script.id = 'google-translate-script';
-  script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  script.async = true;
-  document.body.appendChild(script);
-}, []);
+    const script = document.createElement('script');
+    script.id = 'google-translate-script';
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   // Customer form data
   const [customerInfo, setCustomerInfo] = useState({ name: '', city: '', phone: '' });
@@ -72,9 +72,9 @@ function App() {
             <div className="w-full max-w-7xl mx-auto mb-4">
               <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center justify-between px-4 py-3 relative">
                 {/* Google Translate Widget - top left, professional look */}
-                <div className="absolute left-4 top-3 z-10 flex items-center">
+                <div className="absolute left-1 top-1 z-10 flex items-center max-w-[72px] sm:max-w-none">
                   <span className="text-xs text-gray-500 mr-1 hidden sm:inline">🌐</span>
-                  <div id="google_translate_element" />
+                  <div id="google_translate_element" className="scale-75 sm:scale-100 origin-top-left" />
                 </div>
                 {/* Title Card Content */}
                 <div className="flex-1 text-center">
@@ -97,9 +97,31 @@ function App() {
 
             {/* === MAIN CONTENT AREA === */}
             <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* LEFT COLUMN */}
+              {/* RIGHT COLUMN - NOW FIRST */}
               <div className="flex flex-col gap-4">
-                
+                {/* MODEL IMAGE PREVIEW CARD */}
+                <div className="bg-white shadow rounded-xl p-4 flex items-center justify-center h-[200px]">
+                  {formData.model && modelImages[formData.model] ? (
+                    <img
+                      src={modelImages[formData.model]}
+                      alt={formData.model}
+                      className="w-full h-[200px] object-contain"
+                    />
+                  ) : (
+                    <div className="text-gray-400 text-sm text-center">No Model Selected</div>
+                  )}
+                </div>
+
+                {/* QUOTE SUMMARY CARD */}
+                <div className="bg-white shadow rounded-xl p-4">
+                  <div id="quote-section">
+                    <QuoteCalculator customerInfo={customerInfo} formData={formData} />
+                  </div>
+                </div>
+              </div>
+
+              {/* LEFT COLUMN - NOW SECOND */}
+              <div className="flex flex-col gap-4">
                 {/* CUSTOMER INFO CARD */}
                 <div className="bg-white shadow rounded-xl p-4">
                   <h2 className="text-lg font-semibold text-blue-700 mb-2">Customer Info</h2>
@@ -137,29 +159,6 @@ function App() {
                     addOnQuantities={formData.addOnQuantities}
                     onFormChange={handleFormChange}
                   />
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN */}
-              <div className="flex flex-col gap-4">
-                {/* MODEL IMAGE PREVIEW CARD */}
-                <div className="bg-white shadow rounded-xl p-4 flex items-center justify-center h-[200px]">
-                  {formData.model && modelImages[formData.model] ? (
-                    <img
-                      src={modelImages[formData.model]}
-                      alt={formData.model}
-                      className="w-full h-[200px] object-contain"
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-sm text-center">No Model Selected</div>
-                  )}
-                </div>
-
-                {/* QUOTE SUMMARY CARD */}
-                <div className="bg-white shadow rounded-xl p-4">
-                  <div id="quote-section">
-                    <QuoteCalculator customerInfo={customerInfo} formData={formData} />
-                  </div>
                 </div>
               </div>
             </div>
