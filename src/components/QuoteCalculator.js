@@ -27,7 +27,7 @@ const defaultSettings = {
   profitMargin: 0.30,
   companyName: 'Your Glass Company',
   companyEmail: 'info@yourcompany.com',
-  companyPhone: '+1234567890' // <-- Replace with your actual number
+  companyPhone: '+97248406047' // <-- Replace with your actual number
 };
 
 const modelImages = {
@@ -271,22 +271,22 @@ Contact: ${settings.companyEmail}
           )}
         </li>
       ));
-    return (
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Optional Add-ons</label>
-        <ul className="list-disc list-inside space-y-1 ml-3">
-          {selectedAddOns}
-          {formData.customAddon && (
-            <li className="text-sm">
-              <span className="font-medium">{formData.customAddon}</span>
-            </li>
-          )}
-          {selectedAddOns.length === 0 && !formData.customAddon && (
-            <li className="text-gray-400 text-sm">None selected</li>
-          )}
-        </ul>
-      </div>
-    );
+    // return (
+    //   <div className="mb-6">
+    //     <label className="block text-sm font-medium text-gray-700 mb-2">Optional Add-ons</label>
+    //     <ul className="list-disc list-inside space-y-1 ml-3">
+    //       {selectedAddOns}
+    //       {formData.customAddon && (
+    //         <li className="text-sm">
+    //           <span className="font-medium">{formData.customAddon}</span>
+    //         </li>
+    //       )}
+    //       {selectedAddOns.length === 0 && !formData.customAddon && (
+    //         <li className="text-gray-400 text-sm">None selected</li>
+    //       )}
+    //     </ul>
+    //   </div>
+    // );
   };
 
   return (
@@ -296,18 +296,7 @@ Contact: ${settings.companyEmail}
       {quote ? (
         <div className="space-y-2">
           <div className="bg-blue-50 p-2 rounded-lg shadow-inner">
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <span className="font-semibold">Area:</span>
-              <span className="font-medium">{quote.area} m²</span>
-              <span className="font-semibold">Base Price:</span>
-              <span className="font-medium">${quote.basePrice}</span>
-              <span className="font-semibold">Hardware:</span>
-              <span className="font-medium">${quote.hardwarePrice}</span>
-              <span className="font-semibold">Add-ons:</span>
-              <span className="font-medium">${quote.addOnsCost}</span>
-              <span className="font-semibold">Subtotal:</span>
-              <span className="font-medium">${quote.subtotal}</span>
-            </div>
+          
           </div>
           <div className="bg-green-100 p-2 rounded-lg border-2 border-green-300 shadow-inner">
             <div className="text-center">

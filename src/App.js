@@ -1,4 +1,3 @@
-// Main entry for the app with routing and UI layout
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QuoteCalculator from './components/QuoteCalculator';
@@ -8,11 +7,9 @@ import Contact from "./pages/Contact";
 import './App.css'; // Optional general styles
 import './i18n/i18n'; // i18n config
 import { useTranslation } from "react-i18next";
-//import './output.css'; // or whatever path you used for -o
 
 // Dictionary for model images
 const modelImages = {
-  // Format: 'model_code': 'image_path'
   'MTI-101': '/images/models/MTI-101.jpeg',
   'MTI-102': '/images/models/MTI-102.jpg',
   'MTI-103': '/images/models/MTI-103.jpg',
@@ -68,8 +65,9 @@ function App() {
       <Routes>
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 py-4 px-2 lg:px-10 text-[90%]">
+
             {/* === HEADER / TOP CARD === */}
-            <div className="w-full max-w-7xl mx-auto mb-4">
+            <div className="w-full max-w-7xl mx-auto mb-8">
               <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center justify-between px-4 py-3 relative">
                 {/* Google Translate Widget - top left, professional look */}
                 <div className="absolute left-1 top-1 z-10 flex items-center max-w-[72px] sm:max-w-none">
@@ -117,6 +115,21 @@ function App() {
                   <div id="quote-section">
                     <QuoteCalculator customerInfo={customerInfo} formData={formData} />
                   </div>
+                  {/* Always-visible action buttons (example) */}
+                  {/* <div className="flex justify-end space-x-2 mt-4">
+                    <button
+                      className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition disabled:opacity-50"
+                      disabled={!formData.model}
+                    >
+                      Save Quote
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-emerald-600 text-white rounded shadow hover:bg-emerald-700 transition disabled:opacity-50"
+                      disabled={!formData.model}
+                    >
+                      Print
+                    </button>
+                  </div> */}
                 </div>
               </div>
 

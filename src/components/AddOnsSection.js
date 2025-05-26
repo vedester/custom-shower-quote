@@ -1,6 +1,4 @@
-//src/components/AddOnsSection.js
 import React, { useState, useEffect } from 'react';
-
 
 const addOns = [
   { id: 'Towel Handle', label: 'Towel Handle', price: 150 },
@@ -58,18 +56,18 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, cust
                       + Add
                     </button>
                   ) : (
-                    <div className="flex items-center bg-gray-100 rounded-full px-1 py-0.5 shadow-inner">
+                    <div className="flex items-center bg-gray-100 rounded-full px-1.5 py-0.5 shadow-inner">
                       <button
                         type="button"
                         onClick={() => updateQuantity(addOn.id, -1)}
-                        className="w-4 h-4 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-[9px] font-bold text-gray-800"
+                        className="w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-base font-bold text-gray-800 transition"
                         aria-label="Decrease"
                       >−</button>
-                      <span className="w-4 text-center font-medium text-[9px] text-gray-800">{qty}</span>
+                      <span className="w-5 text-center font-medium text-sm text-gray-800">{qty}</span>
                       <button
                         type="button"
                         onClick={() => updateQuantity(addOn.id, 1)}
-                        className="w-4 h-4 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-[9px] font-bold text-gray-800"
+                        className="w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-base font-bold text-gray-800 transition"
                         aria-label="Increase"
                       >+</button>
                     </div>
@@ -80,18 +78,7 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, cust
           })}
         </div>
       </div>
-
-      {/* Custom Add-on Input (optional future section)
-      <div className="bg-white shadow-xl rounded-2xl p-4 sm:p-6 border border-gray-100">
-        <h4 className="text-base sm:text-lg font-semibold mb-2 text-gray-700">Other custom add-ons (optional)</h4>
-        <input
-          type="text"
-          value={customAddon || ''}
-          onChange={e => onFormChange('customAddon', e.target.value)}
-          className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
-          placeholder="Enter your custom add-on"
-        />
-      </div> */}
+      {/* (Custom Add-on Input remains unchanged and commented out) */}
     </div>
   );
 }
