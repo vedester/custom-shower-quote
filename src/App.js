@@ -8,7 +8,7 @@ import Contact from "./pages/Contact";
 import './App.css'; // Optional general styles
 import './i18n/i18n'; // i18n config
 import { useTranslation } from "react-i18next";
-import './output.css'; // or whatever path you used for -o
+//import './output.css'; // or whatever path you used for -o
 
 // Dictionary for model images
 const modelImages = {
