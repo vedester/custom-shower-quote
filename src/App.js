@@ -46,8 +46,16 @@ function App() {
         {/* === HEADER / NAVIGATION BAR === */}
         <header className="w-full max-w-7xl mx-auto mb-8">
           <div className="bg-white shadow-md rounded-xl flex flex-col md:flex-row items-center px-6 py-5 md:py-4 md:px-10">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2">
+              <img
+                src="/logo.jpeg"
+                alt="Shower Glass Calculator Logo"
+                className="w-10 h-10 object-contain rounded-full shadow-sm hover:scale-105 transition duration-200"
+              />
+            </Link>
             {/* NAVIGATION */}
-            <nav className="flex items-center flex-wrap gap-2 md:gap-4">
+            <nav className="flex items-center flex-wrap gap-2 md:gap-4 ml-4">
               {[
                 { to: "/", label: "Home" },
                 { to: "/about", label: "About Us" },
@@ -100,10 +108,10 @@ function App() {
           <Routes>
             <Route path="/" element={
               <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* RIGHT COLUMN */}
-                <div className="flex flex-col gap-6">
+                {/* LEFT ON DESKTOP, LAST ON MOBILE: Model Preview + Quote */}
+                <div className="flex flex-col gap-6 order-2 lg:order-1">
                   {/* MODEL IMAGE PREVIEW CARD */}
-                  <div className="bg-white shadow-lg rounded-2xl p-6 flex items-center justify-center h-[400px] min-h-[250px] transition-all duration-200">
+                  <div className="bg-white shadow-lg rounded-2xl p-6 flex items-center justify-center h-[400px] min-h-[250px]">
                     {formData.model && modelImages[formData.model] ? (
                       <img
                         src={modelImages[formData.model]}
@@ -114,7 +122,6 @@ function App() {
                       <div className="text-gray-400 text-xl font-medium text-center">No Model Selected</div>
                     )}
                   </div>
-
                   {/* QUOTE SUMMARY CARD */}
                   <div className="bg-white shadow-lg rounded-2xl p-4">
                     <div id="quote-section">
@@ -123,11 +130,11 @@ function App() {
                   </div>
                 </div>
 
-                {/* LEFT COLUMN */}
-                <div className="flex flex-col gap-6">
+                {/* RIGHT ON DESKTOP, FIRST ON MOBILE: Customer Info + Config */}
+                <div className="flex flex-col gap-6 order-1 lg:order-2">
                   {/* CUSTOMER INFO CARD */}
-                  <div className="bg-white shadow-lg rounded-2xl p-2">
-                    <h2 className="text-lg font-semibold text-blue-700 mb-2">Customer Info</h2>
+                  <div className="bg-white shadow-lg rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold text-blue-700 mb-3">Customer Info</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {[
                         { label: 'Name *', value: customerInfo.name, field: 'name', placeholder: 'Enter your name' },
@@ -146,15 +153,14 @@ function App() {
                       ))}
                     </div>
                   </div>
-
-                  {/* COMBINED SHOWER CONFIGURATOR & ADD-ONS CARD */}
-                  <div className="bg-white shadow-lg rounded-2xl p-2">
-                    <h2 className="text-lg font-semibold text-blue-700 mb-0.7">Glass Configuration & Add-Ons</h2>
+                  {/* SHOWER CONFIG + ADDONS CARD */}
+                  <div className="bg-white shadow-lg rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold text-blue-700 mb-3">Glass Configuration & Add-Ons</h2>
                     <ShowerConfigurator
                       formData={formData}
                       onFormChange={handleFormChange}
                     />
-                    <div className="border-t border-gray-200 my-0.5"></div>
+                    <div className="border-t border-gray-200 my-6"></div>
                     <AddOnsSection
                       addOnQuantities={formData.addOnQuantities}
                       onFormChange={handleFormChange}
@@ -169,7 +175,6 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
           </Routes>
         </main>
-        {/* Footer could be added here for even more polish */}
       </div>
     </Router>
   );
