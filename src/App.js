@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QuoteCalculator from './components/QuoteCalculator';
 import ShowerConfigurator from './components/ShowerConfigurator';
 import AddOnsSection from './components/AddOnsSection';
@@ -21,11 +21,6 @@ const modelImages = {
 function App() {
   const { t, i18n } = useTranslation();
 
-  // Set dir=rtl or ltr on <body> for language
-  useEffect(() => {
-    document.body.dir = i18n.language === 'he' ? 'rtl' : 'ltr';
-  }, [i18n.language]);
-
   // Form State
   const [customerInfo, setCustomerInfo] = useState({ name: '', city: '', phone: '' });
   const [formData, setFormData] = useState({
@@ -46,36 +41,14 @@ function App() {
     if (lang !== i18n.language) i18n.changeLanguage(lang);
   };
 
-  // Responsive grid order: only swap on EN (LTR), keep right on right for HE (RTL)
+  // Professional responsive order: Right cards (config) first on mobile, left cards (model/summary) at end.
   function MainGrid() {
-    const isHebrew = i18n.language === 'he';
     return (
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LEFT: Model + Quote Summary */}
-        <div className={`flex flex-col gap-6 ${isHebrew ? 'order-1' : 'order-2 lg:order-1'}`}>
-          {/* Model Preview */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 h-[400px] flex items-center justify-center">
-            {formData.model && modelImages[formData.model] ? (
-              <img
-                src={modelImages[formData.model]}
-                alt={formData.model}
-                className="h-full object-contain rounded-xl"
-              />
-            ) : (
-              <div className="text-gray-400 text-lg font-semibold text-center">
-                {t("No Model Selected")}
-              </div>
-            )}
-          </div>
-          {/* Quote Summary */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <QuoteCalculator customerInfo={customerInfo} formData={formData} />
-          </div>
-        </div>
-        {/* RIGHT: Customer Info + Config -- always right, never swaps on RTL */}
-        <div className={`flex flex-col gap-6 ${isHebrew ? 'order-2' : 'order-1 lg:order-2'}`}>
+        {/* RIGHT: Customer Info + Config -- always first on mobile, right on desktop */}
+        <div className="flex flex-col gap-6 order-1 lg:order-2">
           {/* Customer Info */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6">
             <h2 className="text-lg font-semibold text-blue-700 mb-4">
               {t("Customer Info")}
             </h2>
@@ -98,7 +71,7 @@ function App() {
             </div>
           </div>
           {/* Glass Config & Add-ons */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6">
             <h2 className="text-lg font-semibold text-blue-700 mb-4">
               {t("Glass Configuration & Add-Ons")}
             </h2>
@@ -107,32 +80,52 @@ function App() {
             <AddOnsSection addOnQuantities={formData.addOnQuantities} onFormChange={handleFormChange} />
           </div>
         </div>
+        {/* LEFT: Model + Quote Summary -- always last on mobile, left on desktop */}
+        <div className="flex flex-col gap-6 order-2 lg:order-1">
+          {/* Model Preview */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 h-[320px] flex items-center justify-center">
+            {formData.model && modelImages[formData.model] ? (
+              <img
+                src={modelImages[formData.model]}
+                alt={formData.model}
+                className="h-full object-contain rounded-xl transition-transform duration-300 hover:scale-105"
+              />
+            ) : (
+              <div className="text-gray-400 text-lg font-semibold text-center">
+                {t("No Model Selected")}
+              </div>
+            )}
+          </div>
+          {/* Quote Summary */}
+          <div className="bg-white rounded-2xl shadow-xl p-6">
+            <QuoteCalculator customerInfo={customerInfo} formData={formData} />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-emerald-100 py-6 px-4 lg:px-12 text-[95%]">
-        {/* === HEADER === */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-emerald-100 py-6 px-2 sm:px-4 lg:px-12 text-[95%]">
+        {/* === NAVBAR & TITLE === */}
         <header className="w-full max-w-7xl mx-auto mb-10">
-          <div className="bg-white shadow-xl rounded-3xl flex flex-col md:flex-row items-center justify-between px-6 py-4">
+          <div className="bg-white shadow-2xl rounded-3xl flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 py-4 gap-4">
             {/* Logo & Title */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <Link to="/" className="flex items-center">
                 <img
                   src="/logo.jpeg"
                   alt="Logo"
-                  className="w-12 h-12 object-cover rounded-full border-2 border-blue-500"
+                  className="w-12 h-12 object-cover rounded-full border-2 border-blue-500 shadow"
                 />
               </Link>
-              <h1 className="text-2xl md:text-3xl font-bold text-blue-700">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-700 tracking-tight drop-shadow-lg">
                 {t("title")}
               </h1>
             </div>
-
             {/* Nav + Language Toggle */}
-            <nav className="flex items-center gap-4 mt-4 md:mt-0">
+            <nav className="flex flex-wrap items-center gap-2 sm:gap-4">
               {[
                 { to: "/", label: t("Home") },
                 { to: "/about", label: t("About Us") },
@@ -143,24 +136,25 @@ function App() {
                 <Link
                   key={to}
                   to={to}
-                  className="text-sm font-medium text-gray-700 px-3 py-1.5 rounded-md hover:text-blue-700 hover:bg-blue-100 transition"
+                  className="text-sm font-medium text-gray-700 px-2 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-100 transition active:scale-95"
                 >
                   {label}
                 </Link>
               ))}
-              <div className="flex gap-2">
+              {/* Language Switcher */}
+              <div className="flex gap-1">
                 <button
                   onClick={() => toggleLanguage('en')}
-                  className={`text-sm px-3 py-1.5 rounded-md transition 
-                    ${i18n.language === 'en' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  className={`text-xs px-3 py-1.5 rounded-md transition font-semibold
+                    ${i18n.language === 'en' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   aria-label="Switch to English"
                 >
                   English
                 </button>
                 <button
                   onClick={() => toggleLanguage('he')}
-                  className={`text-sm px-3 py-1.5 rounded-md transition 
-                    ${i18n.language === 'he' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  className={`text-xs px-3 py-1.5 rounded-md transition font-semibold
+                    ${i18n.language === 'he' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   aria-label="Switch to Hebrew"
                 >
                   עברית

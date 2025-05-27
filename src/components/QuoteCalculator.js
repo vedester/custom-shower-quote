@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import jsPDF from 'jspdf';
 import { useTranslation } from 'react-i18next';
+// IMPORTANT: Import your Hebrew font generated from jsPDF fontconverter
+// Place NotoSansHebrew.js (and NotoSansHebrew-Regular.ttf in the same folder) in src/fonts/
+//import '../fonts/NotoSansHebrew.js'; // adjust path as needed
 
 const defaultSettings = {
   glassTypes: {
@@ -120,7 +123,7 @@ ${t('phone')}: ${customerInfo.phone}
 
 ${t('projectDetails')}
 ${t('showerTypeLabel')}: ${t(`showerTypes.${formData.showerType}`)}
-${t('modelLabel')}: ${formData.model}
+${t('modelLabel')}: ${t(`modelNames.${formData.model}`)}
 ${t('glassTypeLabel')}: ${t(`glassTypes.${formData.glassType}`)}
 ${t('glassThicknessLabel')}: ${formData.glassThickness}mm
 ${t('hardwareFinishLabel')}: ${t(`hardwareFinishes.${formData.hardwareFinish}`)}
@@ -162,9 +165,21 @@ ${t('contact')}: ${settings.companyEmail}
       img.src = url;
     });
 
-  // --- FIX: Move these handlers ABOVE the return! ---
+  // --- PDF: Now using Hebrew font for Hebrew PDFs! ---
   const downloadQuote = async () => {
-    const doc = new jsPDF();
+    const isHebrew = i18n.language === 'he';
+    const doc = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Add Hebrew font if needed
+    if (isHebrew) {
+      doc.addFont('NotoSansHebrew-Regular.ttf', 'NotoSansHebrew', 'normal');
+      doc.setFont('NotoSansHebrew');
+    }
+
     let y = 10;
     if (formData.model && modelImages[formData.model]) {
       const imgData = await getImageBase64(modelImages[formData.model]);
@@ -174,7 +189,12 @@ ${t('contact')}: ${settings.companyEmail}
       }
     }
     const lines = doc.splitTextToSize(generateQuoteText(), 180);
-    doc.text(lines, 10, y);
+    if (isHebrew) {
+      doc.setFontSize(12);
+      doc.text(lines, 200, y, { align: 'right' }); // right aligned for RTL
+    } else {
+      doc.text(lines, 10, y);
+    }
     doc.save(`quote-${customerInfo.name || 'customer'}-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
@@ -208,7 +228,6 @@ ${t('contact')}: ${settings.companyEmail}
     );
     window.open(`mailto:${ownerEmail}?subject=${subject}&body=${body}`, '_blank');
   };
-  // --- END OF HANDLERS ---
 
   useEffect(() => {
     return () => {
@@ -247,7 +266,6 @@ ${t('contact')}: ${settings.companyEmail}
     );
   };
 
-  // ----------- RENDER -----------
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {renderAddOnsSummary()}
