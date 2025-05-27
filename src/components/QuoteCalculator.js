@@ -275,7 +275,7 @@ ${t('contact')}: ${settings.companyEmail}
           <div className="text-center">
             <div className="text-xs text-gray-600 uppercase tracking-wider">{t('Final Price')}</div>
             <div className="text-2xl font-extrabold text-green-700 my-1">
-              {quote ? `$${quote.finalPrice}` : '$0.00'}
+              {quote ? `₪${quote.finalPrice}` : '₪0.00'}
             </div>
             <div className="text-[10px] text-gray-500 mt-1">
               {t('Including {percent}% profit margin', { percent: Math.round((settings.profitMargin || 0.3) * 100) })}
