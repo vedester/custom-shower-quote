@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const MAX_HEIGHT = 2.4;
 const MAX_WIDTH = 1.5;
@@ -6,6 +7,8 @@ const REGULAR_HEIGHT = 2.1;
 const REGULAR_WIDTH = 1.5;
 
 const ShowerConfigurator = ({ formData, onFormChange }) => {
+  const { t } = useTranslation();
+
   const height = parseFloat(formData.height) || '';
   const width = parseFloat(formData.width) || '';
   const length = parseFloat(formData.length) || '';
@@ -14,16 +17,16 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
   let installNotice = '';
 
   if (height > MAX_HEIGHT) {
-    dimensionWarning = `Maximum allowed height is ${MAX_HEIGHT}m. Please adjust your value.`;
+    dimensionWarning = t('dimensionHeightWarning', { maxHeight: MAX_HEIGHT });
   } else if (width > MAX_WIDTH) {
-    dimensionWarning = `Maximum allowed width is ${MAX_WIDTH}m. Please adjust your value.`;
+    dimensionWarning = t('dimensionWidthWarning', { maxWidth: MAX_WIDTH });
   }
 
   if (!dimensionWarning) {
     if (height > REGULAR_HEIGHT) {
-      installNotice = 'Notice: Height above 2.1m will require special installation and may increase the installation price.';
+      installNotice = t('installNoticeHeight', { regularHeight: REGULAR_HEIGHT });
     } else if (width > REGULAR_WIDTH) {
-      installNotice = 'Notice: Width above 1.5m will require special installation and may increase the installation price.';
+      installNotice = t('installNoticeWidth', { regularWidth: REGULAR_WIDTH });
     }
   }
 
@@ -57,11 +60,6 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
     'Graphite', 'Rose Gold', 'Matte Gold',
   ];
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) onFormChange('photo', file);
-  };
-
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-2 space-y-4 border border-gray-200">
       <select
@@ -70,9 +68,9 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         onChange={(e) => onFormChange('showerType', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>Shower Type</option>
+        <option value="" disabled>{t('showerTypeLabel')}</option>
         {showerTypes.map(type => (
-          <option key={type} value={type}>{type}</option>
+          <option key={type} value={type}>{t(`showerTypes.${type}`)}</option>
         ))}
       </select>
 
@@ -83,9 +81,12 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
         disabled={!formData.showerType}
       >
-        <option value="" disabled>{formData.showerType ? 'Model' : 'Select shower type first'}</option>
+        <option value="" disabled>
+          {formData.showerType ? t('modelLabel') : t('selectShowerTypeFirst')}
+        </option>
+        
         {formData.showerType && models[formData.showerType].map(model => (
-          <option key={model} value={model}>{model}</option>
+          <option key={model} value={model}>{t(`modelNames.${model}`)}</option>
         ))}
       </select>
 
@@ -95,9 +96,9 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         onChange={(e) => onFormChange('glassType', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>Glass Type</option>
+        <option value="" disabled>{t('glassTypeLabel')}</option>
         {glassTypes.map(type => (
-          <option key={type} value={type}>{type}</option>
+          <option key={type} value={type}>{t(`glassTypes.${type}`)}</option>
         ))}
       </select>
 
@@ -107,10 +108,10 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         onChange={(e) => onFormChange('glassThickness', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>Glass Thickness</option>
-        <option value="6">6 mm</option>
-        <option value="8">8 mm (Recommended)</option>
-        <option value="10">10 mm</option>
+        <option value="" disabled>{t('glassThicknessLabel')}</option>
+        <option value="6">{t('glassThickness6')}</option>
+        <option value="8">{t('glassThickness8')}</option>
+        <option value="10">{t('glassThickness10')}</option>
       </select>
 
       <select
@@ -119,9 +120,9 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
         onChange={(e) => onFormChange('hardwareFinish', e.target.value)}
         className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
       >
-        <option value="" disabled>Hardware Finish</option>
+        <option value="" disabled>{t('hardwareFinishLabel')}</option>
         {finishes.map(finish => (
-          <option key={finish} value={finish}>{finish}</option>
+          <option key={finish} value={finish}>{t(`hardwareFinishes.${finish}`)}</option>
         ))}
       </select>
 
@@ -134,7 +135,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           max={MAX_HEIGHT}
           value={formData.height}
           onChange={(e) => onFormChange('height', e.target.value)}
-          placeholder="Height (m)"
+          placeholder={t('heightPlaceholder')}
           className={`w-full p-3 border ${height > MAX_HEIGHT ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
         <input
@@ -145,7 +146,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           max={MAX_WIDTH}
           value={formData.width}
           onChange={(e) => onFormChange('width', e.target.value)}
-          placeholder="Width (m)"
+          placeholder={t('widthPlaceholder')}
           className={`w-full p-3 border ${width > MAX_WIDTH ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
         {formData.showerType === 'Corner' && (
@@ -156,7 +157,7 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
             min="0.3"
             value={formData.length}
             onChange={(e) => onFormChange('length', e.target.value)}
-            placeholder="Length (m)"
+            placeholder={t('lengthPlaceholder')}
             className="w-full p-3 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm col-span-2"
           />
         )}

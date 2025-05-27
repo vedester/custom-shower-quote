@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const addOns = [
-  { id: 'Towel Handle', label: 'Towel Handle', price: 150 },
-  { id: 'Nano Coating', label: 'Nano Coating', price: 200 },
-  { id: 'Custom Notches', label: 'Custom Notches', price: 100 },
-  { id: 'Wall Reinforcements', label: 'Wall Reinforcements', price: 180 },
-  { id: 'Additional Seals', label: 'Additional Seals', price: 80 }
+  { id: 'Towel Handle', labelKey: 'addonsList.Towel Handle', price: 150 },
+  { id: 'Nano Coating', labelKey: 'addonsList.Nano Coating', price: 200 },
+  { id: 'Custom Notches', labelKey: 'addonsList.Custom Notches', price: 100 },
+  { id: 'Wall Reinforcements', labelKey: 'addonsList.Wall Reinforcements', price: 180 },
+  { id: 'Additional Seals', labelKey: 'addonsList.Additional Seals', price: 80 }
 ];
 
 export default function AddOnsSection({ addOnQuantities = {}, onFormChange, customAddon }) {
+  const { t } = useTranslation();
+
   const [localQuantities, setLocalQuantities] = useState(
     Object.fromEntries(addOns.map(item => [item.id, addOnQuantities[item.id] || 0]))
   );
@@ -43,7 +46,7 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, cust
                 } hover:shadow-lg hover:border-blue-400`}
               >
                 <div className="text-center">
-                  <h4 className="text-[10px] font-semibold text-gray-800 leading-tight">{addOn.label}</h4>
+                  <h4 className="text-[10px] font-semibold text-gray-800 leading-tight">{t(addOn.labelKey)}</h4>
                   <p className="text-[9px] text-gray-500 mt-0.5">+${addOn.price}</p>
                 </div>
                 <div className="flex flex-col items-center mt-1.5">
@@ -53,7 +56,7 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, cust
                       onClick={() => updateQuantity(addOn.id, 1)}
                       className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[10px] font-semibold"
                     >
-                      + Add
+                      + {t('Add')}
                     </button>
                   ) : (
                     <div className="flex items-center bg-gray-100 rounded-full px-1.5 py-0.5 shadow-inner">
@@ -61,14 +64,14 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, cust
                         type="button"
                         onClick={() => updateQuantity(addOn.id, -1)}
                         className="w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-base font-bold text-gray-800 transition"
-                        aria-label="Decrease"
+                        aria-label={t("Decrease")}
                       >−</button>
                       <span className="w-5 text-center font-medium text-sm text-gray-800">{qty}</span>
                       <button
                         type="button"
                         onClick={() => updateQuantity(addOn.id, 1)}
                         className="w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full text-base font-bold text-gray-800 transition"
-                        aria-label="Increase"
+                        aria-label={t("Increase")}
                       >+</button>
                     </div>
                   )}

@@ -9,7 +9,7 @@ i18n.use(initReactI18next).init({
     en: { translation: en },
     he: { translation: he },
   },
-  lng: 'en', // Default language
+  lng: 'he', // Set Hebrew as the default language
   fallbackLng: 'en',
 
   interpolation: {
