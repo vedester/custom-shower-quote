@@ -6,7 +6,15 @@ const MAX_WIDTH = 1.5;
 const REGULAR_HEIGHT = 2.1;
 const REGULAR_WIDTH = 1.5;
 
-const ShowerConfigurator = ({ formData, onFormChange }) => {
+const ShowerConfigurator = ({
+  formData,
+  onFormChange,
+  showerTypes = [],
+  models = [],
+  glassTypes = [],
+  glassThicknesses = [],
+  finishes = []
+}) => {
   const { t } = useTranslation();
 
   const height = parseFloat(formData.height) || '';
@@ -30,99 +38,75 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
     }
   }
 
-  const showerTypes = [
-    'Frontal (Wall-to-Wall)',
-    'Corner',
-    'CNC Cut',
-    'Sliding Door',
-    'Bathtub Screen (Partial)',
-    'Bathtub Full Closure',
-  ];
-
-  const models = {
-    'Frontal (Wall-to-Wall)': ['MTI-101', 'MTI-102', 'MTI-103'],
-    'Corner': ['MTI-201', 'MTI-202', 'MTI-203'],
-    'CNC Cut': ['MTI-301', 'MTI-302'],
-    'Sliding Door': ['MTI-401', 'MTI-402'],
-    'Bathtub Screen (Partial)': ['MTI-501', 'MTI-502'],
-    'Bathtub Full Closure': ['MTI-601', 'MTI-602'],
-  };
-
-  const glassTypes = [
-    'Clear', 'Extra Clear', 'Frosted', 'Grey', 'Bronze',
-    'Granite', 'Papita', 'Stripes', 'Acid Etched',
-    'Artistic Print', 'Custom Stripes', 'Galina',
-    'Anti-Sun Grey', 'Anti-Sun Bronze',
-  ];
-
-  const finishes = [
-    'Nickel', 'Black', 'White', 'Gold',
-    'Graphite', 'Rose Gold', 'Matte Gold',
-  ];
+  // Only show models for selected shower type
+  const filteredModels = models.filter(
+    (m) => String(m.shower_type_id) === String(formData.showerType)
+  );
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-2 space-y-4 border border-gray-200">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-4 space-y-4 border border-gray-200">
       <select
         id="showerType"
         value={formData.showerType}
-        onChange={(e) => onFormChange('showerType', e.target.value)}
+        onChange={e => onFormChange('showerType', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>{t('showerTypeLabel')}</option>
-        {showerTypes.map(type => (
-          <option key={type} value={type}>{t(`showerTypes.${type}`)}</option>
+        <option value="" disabled>{t('showerTypeLabel') || "Select Shower Type"}</option>
+        {showerTypes.map(st => (
+          <option key={st.id} value={st.id}>{st.name}</option>
         ))}
       </select>
 
       <select
         id="model"
         value={formData.model}
-        onChange={(e) => onFormChange('model', e.target.value)}
+        onChange={e => onFormChange('model', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
         disabled={!formData.showerType}
       >
         <option value="" disabled>
-          {formData.showerType ? t('modelLabel') : t('selectShowerTypeFirst')}
+          {formData.showerType ? (t('modelLabel') || "Select Model") : (t('selectShowerTypeFirst') || "Select Shower Type First")}
         </option>
-        
-        {formData.showerType && models[formData.showerType].map(model => (
-          <option key={model} value={model}>{t(`modelNames.${model}`)}</option>
+        {filteredModels.map(model => (
+          <option key={model.id} value={model.id}>{model.name}</option>
         ))}
       </select>
 
       <select
         id="glassType"
         value={formData.glassType}
-        onChange={(e) => onFormChange('glassType', e.target.value)}
+        onChange={e => onFormChange('glassType', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>{t('glassTypeLabel')}</option>
+        <option value="" disabled>{t('glassTypeLabel') || "Select Glass Type"}</option>
         {glassTypes.map(type => (
-          <option key={type} value={type}>{t(`glassTypes.${type}`)}</option>
+          <option key={type.id} value={type.id}>{type.name}</option>
         ))}
       </select>
 
       <select
         id="glassThickness"
         value={formData.glassThickness}
-        onChange={(e) => onFormChange('glassThickness', e.target.value)}
+        onChange={e => onFormChange('glassThickness', e.target.value)}
         className="w-full rounded border-gray-300 p-3 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-4"
       >
-        <option value="" disabled>{t('glassThicknessLabel')}</option>
-        <option value="6">{t('glassThickness6')}</option>
-        <option value="8">{t('glassThickness8')}</option>
-        <option value="10">{t('glassThickness10')}</option>
+        <option value="" disabled>{t('glassThicknessLabel') || "Select Glass Thickness"}</option>
+        {glassThicknesses.map(thickness => (
+          <option key={thickness.id} value={thickness.id}>
+            {thickness.thickness_mm}mm
+          </option>
+        ))}
       </select>
 
       <select
         id="hardwareFinish"
         value={formData.hardwareFinish}
-        onChange={(e) => onFormChange('hardwareFinish', e.target.value)}
+        onChange={e => onFormChange('hardwareFinish', e.target.value)}
         className="w-full rounded border-gray-300 p-2 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm mb-1"
       >
-        <option value="" disabled>{t('hardwareFinishLabel')}</option>
+        <option value="" disabled>{t('hardwareFinishLabel') || "Select Hardware Finish"}</option>
         {finishes.map(finish => (
-          <option key={finish} value={finish}>{t(`hardwareFinishes.${finish}`)}</option>
+          <option key={finish.id} value={finish.id}>{finish.name}</option>
         ))}
       </select>
 
@@ -134,8 +118,8 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           min="1"
           max={MAX_HEIGHT}
           value={formData.height}
-          onChange={(e) => onFormChange('height', e.target.value)}
-          placeholder={t('heightPlaceholder')}
+          onChange={e => onFormChange('height', e.target.value)}
+          placeholder={t('heightPlaceholder') || "Height (m)"}
           className={`w-full p-3 border ${height > MAX_HEIGHT ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
         <input
@@ -145,22 +129,29 @@ const ShowerConfigurator = ({ formData, onFormChange }) => {
           min="0.3"
           max={MAX_WIDTH}
           value={formData.width}
-          onChange={(e) => onFormChange('width', e.target.value)}
-          placeholder={t('widthPlaceholder')}
+          onChange={e => onFormChange('width', e.target.value)}
+          placeholder={t('widthPlaceholder') || "Width (m)"}
           className={`w-full p-3 border ${width > MAX_WIDTH ? 'border-red-500' : 'border-gray-300'} rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm`}
         />
-        {formData.showerType === 'Corner' && (
-          <input
-            id="length"
-            type="number"
-            step="0.01"
-            min="0.3"
-            value={formData.length}
-            onChange={(e) => onFormChange('length', e.target.value)}
-            placeholder={t('lengthPlaceholder')}
-            className="w-full p-3 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm col-span-2"
-          />
-        )}
+        {(() => {
+          // Find the selected type by ID to check if its name is 'Corner'
+          const selectedType = showerTypes.find(st => String(st.id) === String(formData.showerType));
+          if (selectedType && selectedType.name.toLowerCase().includes("corner")) {
+            return (
+              <input
+                id="length"
+                type="number"
+                step="0.01"
+                min="0.3"
+                value={formData.length}
+                onChange={e => onFormChange('length', e.target.value)}
+                placeholder={t('lengthPlaceholder') || "Length (m)"}
+                className="w-full p-3 border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 text-sm col-span-2"
+              />
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {dimensionWarning && (

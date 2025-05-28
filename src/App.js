@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import QuoteCalculator from './components/QuoteCalculator';
 import ShowerConfigurator from './components/ShowerConfigurator';
@@ -7,98 +7,130 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Gallery from "./pages/Gallery";
 import FAQ from "./pages/FAQ";
+import AdminPanel from "./components/Admin/AdminPanel";
+import CustomerInfoCard from "./components/CustomerInfoCard";
 import './App.css';
 import './i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import ModelCard from './components/ModelCard';
 
-const modelImages = {
-  'MTI-101': '/images/models/MTI-101.jpeg',
-  'MTI-102': '/images/models/MTI-102.jpg',
-  'MTI-103': '/images/models/MTI-103.jpg',
-  'MTI-201': '/images/models/MTI-201.jpeg',
-};
+axios.defaults.withCredentials = true;
+
+const API = "http://localhost:5000/api";
 
 function App() {
   const { t, i18n } = useTranslation();
 
+  // Backend options state
+  const [showerTypes, setShowerTypes] = useState([]);
+  const [models, setModels] = useState([]);
+  const [glassTypes, setGlassTypes] = useState([]);
+  const [glassThicknesses, setGlassThicknesses] = useState([]);
+  const [finishes, setFinishes] = useState([]);
+  const [addons, setAddons] = useState([]);
+  const [prices, setPrices] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${API}/shower-types`).then(res => setShowerTypes(res.data));
+    axios.get(`${API}/models`).then(res => setModels(res.data));
+    axios.get(`${API}/glass-types`).then(res => setGlassTypes(res.data));
+    axios.get(`${API}/glass-thickness`).then(res => setGlassThicknesses(res.data));
+    axios.get(`${API}/finishes`).then(res => setFinishes(res.data));
+    axios.get(`${API}/addons`).then(res => setAddons(res.data));
+  }, []);
+
   // Form State
-  const [customerInfo, setCustomerInfo] = useState({ name: '', city: '', phone: '' });
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    city: '',
+    phone: ''
+  });
+
   const [formData, setFormData] = useState({
-    showerType: '', model: '', glassType: '', glassThickness: '8',
-    hardwareFinish: 'Nickel', height: '', width: '', length: '',
-    addOnQuantities: {}, customAddon: '', photo: null
+    showerType: '',
+    model: '',
+    glassType: '',
+    glassThickness: '',
+    hardwareFinish: '',
+    height: '',
+    width: '',
+    length: '',
+    addOnQuantities: {},
+    customAddon: '',
+    photo: null
   });
 
   // Handlers
-  const handleCustomerChange = (field, value) =>
-    setCustomerInfo(prev => ({ ...prev, [field]: value }));
-
-  const handleFormChange = (field, value) =>
-    setFormData(prev => ({ ...prev, [field]: value }));
-
-  // Language toggle
-  const toggleLanguage = lang => {
-    if (lang !== i18n.language) i18n.changeLanguage(lang);
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  // Professional responsive order: Right cards (config) first on mobile, left cards (model/summary) at end.
+  // Language toggle
+  const toggleLanguage = (lang) => {
+    if (lang !== i18n.language) {
+      i18n.changeLanguage(lang);
+    }
+  };
+
+  // Main Grid Component
   function MainGrid() {
+    const selectedModel = models.find(m => String(m.id) === String(formData.model));
+    const imageSrc = selectedModel && selectedModel.image_path
+      ? `http://localhost:5000${selectedModel.image_path}`
+      : null;
+
     return (
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* RIGHT: Customer Info + Config -- always first on mobile, right on desktop */}
-        <div className="flex flex-col gap-6 order-1 lg:order-2">
-          {/* Customer Info */}
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-lg font-semibold text-blue-700 mb-4">
-              {t("Customer Info")}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { label: t('Name *'), field: 'name', placeholder: t('Enter your name') },
-                { label: t('City *'), field: 'city', placeholder: t('Enter your city') },
-                { label: t('Phone *'), field: 'phone', placeholder: t('Enter phone number') }
-              ].map(({ field, placeholder }) => (
-                <input
-                  key={field}
-                  type={field === 'phone' ? 'tel' : 'text'}
-                  value={customerInfo[field]}
-                  onChange={(e) => handleCustomerChange(field, e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder={placeholder}
-                  required
-                />
-              ))}
-            </div>
-          </div>
-          {/* Glass Config & Add-ons */}
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-lg font-semibold text-blue-700 mb-4">
-              {t("Glass Configuration & Add-Ons")}
-            </h2>
-            <ShowerConfigurator formData={formData} onFormChange={handleFormChange} />
-            <div className="border-t my-6" />
-            <AddOnsSection addOnQuantities={formData.addOnQuantities} onFormChange={handleFormChange} />
-          </div>
-        </div>
-        {/* LEFT: Model + Quote Summary -- always last on mobile, left on desktop */}
-        <div className="flex flex-col gap-6 order-2 lg:order-1">
+      <div className="w-full max-w-5xl mx-auto mt-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* LEFT: Model + Quote Summary */}
+        <div className="flex flex-col gap-36">
           {/* Model Preview */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 h-[320px] flex items-center justify-center">
-            {formData.model && modelImages[formData.model] ? (
-              <img
-                src={modelImages[formData.model]}
-                alt={formData.model}
-                className="h-full object-contain rounded-xl transition-transform duration-300 hover:scale-105"
-              />
-            ) : (
-              <div className="text-gray-400 text-lg font-semibold text-center">
-                {t("No Model Selected")}
-              </div>
-            )}
+          <div className="bg-white rounded-xl shadow p-1 h-[170px] flex items-center justify-center">
+            <ModelCard
+              imageSrc={imageSrc}
+              modelName={selectedModel ? selectedModel.name : ""}
+            />
           </div>
           {/* Quote Summary */}
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <QuoteCalculator customerInfo={customerInfo} formData={formData} />
+          <div className="bg-white rounded-xl shadow p-2">
+            <QuoteCalculator
+              customerInfo={customerInfo}
+              formData={formData}
+              glassTypes={glassTypes}
+              finishes={finishes}
+              addOns={addons}
+              prices={prices}
+              models={models}
+              showerTypes={showerTypes}
+              companySettings={{}}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT: Shower Config & Add-ons */}
+        <div className="flex flex-col gap-2">
+          <div className="bg-white rounded-xl shadow p-2">
+            <h2 className="text-xs font-bold text-blue-700 mb-1">
+              {t("Glass Configuration & Add-Ons")}
+            </h2>
+            <ShowerConfigurator
+              formData={formData}
+              onFormChange={handleFormChange}
+              showerTypes={showerTypes}
+              models={models}
+              glassTypes={glassTypes}
+              glassThicknesses={glassThicknesses}
+              finishes={finishes}
+            />
+            <div className="border-t my-2" />
+            <AddOnsSection
+              addOnQuantities={formData.addOnQuantities}
+              onFormChange={handleFormChange}
+              addons={addons}
+            />
           </div>
         </div>
       </div>
@@ -107,25 +139,26 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-emerald-100 py-6 px-2 sm:px-4 lg:px-12 text-[95%]">
-        {/* === NAVBAR & TITLE === */}
-        <header className="w-full max-w-7xl mx-auto mb-10">
-          <div className="bg-white shadow-2xl rounded-3xl flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 py-4 gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-emerald-100 py-2 px-1 text-[90%]">
+        {/* NAVBAR & TITLE */}
+        <header className="w-full max-w-5xl mx-auto mb-2">
+          <div className="bg-white shadow rounded-xl flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 gap-2">
             {/* Logo & Title */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2">
               <Link to="/" className="flex items-center">
                 <img
                   src="/logo.jpeg"
                   alt="Logo"
-                  className="w-12 h-12 object-cover rounded-full border-2 border-blue-500 shadow"
+                  className="w-8 h-8 object-cover rounded-full border border-blue-500 shadow"
                 />
               </Link>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-700 tracking-tight drop-shadow-lg">
+              <h1 className="text-lg font-bold text-blue-700 tracking-tight drop-shadow-sm">
                 {t("title")}
               </h1>
             </div>
+
             {/* Nav + Language Toggle */}
-            <nav className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <nav className="flex flex-wrap items-center gap-1">
               {[
                 { to: "/", label: t("Home") },
                 { to: "/about", label: t("About Us") },
@@ -136,25 +169,36 @@ function App() {
                 <Link
                   key={to}
                   to={to}
-                  className="text-sm font-medium text-gray-700 px-2 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-100 transition active:scale-95"
+                  className="text-xs font-medium text-gray-700 px-1.5 py-1 rounded hover:text-blue-700 hover:bg-blue-100 transition active:scale-95"
                 >
                   {label}
                 </Link>
               ))}
+              {/* Admin Panel Button */}
+              <Link
+                to="/admin"
+                className="text-xs font-bold text-white bg-blue-700 px-1.5 py-1 rounded hover:bg-blue-900 transition ml-1"
+              >
+                Admin
+              </Link>
               {/* Language Switcher */}
-              <div className="flex gap-1">
+              <div className="flex gap-0.5">
                 <button
                   onClick={() => toggleLanguage('en')}
-                  className={`text-xs px-3 py-1.5 rounded-md transition font-semibold
-                    ${i18n.language === 'en' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  className={`text-[10px] px-2 py-1 rounded transition font-semibold
+                    ${i18n.language === 'en'
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   aria-label="Switch to English"
                 >
                   English
                 </button>
                 <button
                   onClick={() => toggleLanguage('he')}
-                  className={`text-xs px-3 py-1.5 rounded-md transition font-semibold
-                    ${i18n.language === 'he' ? 'bg-blue-600 text-white shadow' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  className={`text-[10px] px-2 py-1 rounded transition font-semibold
+                    ${i18n.language === 'he'
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                   aria-label="Switch to Hebrew"
                 >
                   עברית
@@ -164,7 +208,16 @@ function App() {
           </div>
         </header>
 
-        {/* === MAIN === */}
+        {/* Customer Info Card DIRECTLY after header */}
+        <div className="w-full max-w-5xl mx-auto mb-0.1">
+          <CustomerInfoCard
+            customerInfo={customerInfo}
+            setCustomerInfo={setCustomerInfo}
+            t={t}
+          />
+        </div>
+
+        {/* MAIN CONTENT */}
         <main>
           <Routes>
             <Route path="/" element={<MainGrid />} />
@@ -172,6 +225,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/admin" element={<AdminPanel />} />
           </Routes>
         </main>
       </div>
