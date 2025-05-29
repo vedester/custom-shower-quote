@@ -3,7 +3,7 @@ import axios from "axios";
 import ImageUpload from "./ImageUpload";
 import ModelComponentEditor from "./ModelComponentEditor";
 
-const API = "http://localhost:5000/api";
+const API = "https://shower-quote-backend.onrender.com/api";
 
 const ModelManager = () => {
   const [models, setModels] = useState([]);
@@ -54,7 +54,7 @@ const ModelManager = () => {
             <div className="w-48 h-40 flex-shrink-0 bg-gray-100 mr-4 flex items-center justify-center">
               {model.image_path ? (
                 <img
-                  src={`http://localhost:5000${model.image_path}`}
+                  src={`https://shower-quote-backend.onrender.com${model.image_path}`}
                   alt={model.name}
                   className="object-contain h-full w-full"
                 />
@@ -104,7 +104,7 @@ const ModelEditDialog = ({ model, showerTypes, onSave, onClose }) => {
     setUploading(true);
     const data = new FormData();
     data.append("file", file);
-    const res = await axios.post("http://localhost:5000/api/upload-image", data, {
+    const res = await axios.post("https://shower-quote-backend.onrender.com/api/upload-image", data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     setForm({ ...form, image_path: res.data.image_path });

@@ -17,7 +17,7 @@ import ModelCard from './components/ModelCard';
 
 axios.defaults.withCredentials = true;
 
-const API = "http://localhost:5000/api";
+const API = "https://shower-quote-backend.onrender.com/api";
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -80,7 +80,7 @@ function App() {
   function MainGrid() {
     const selectedModel = models.find(m => String(m.id) === String(formData.model));
     const imageSrc = selectedModel && selectedModel.image_path
-      ? `http://localhost:5000${selectedModel.image_path}`
+      ? `https://shower-quote-backend.onrender.com${selectedModel.image_path}`
       : null;
 
     return (

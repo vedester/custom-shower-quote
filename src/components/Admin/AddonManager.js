@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+const API = "https://shower-quote-backend.onrender.com/api";
 
 const AddonManager = () => {
   const [addons, setAddons] = useState([]);

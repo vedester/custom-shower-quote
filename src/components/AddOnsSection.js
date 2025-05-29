@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
-const API = "http://localhost:5000/api";
-
+const API = "https://shower-quote-backend.onrender.com/api";
 export default function AddOnsSection({ addOnQuantities = {}, onFormChange, onPriceChange }) {
   const { t } = useTranslation();
 

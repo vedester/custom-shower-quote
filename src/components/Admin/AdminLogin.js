@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+const API = "https://shower-quote-backend.onrender.com/api";
 
 // ⚡️ Set axios credentials globally (do this ONCE, ideally in index.js or App.js as well)
 axios.defaults.withCredentials = true;

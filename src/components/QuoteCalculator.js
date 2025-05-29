@@ -124,7 +124,8 @@ const QuoteCalculator = ({
   const getModelImageUrl = (imgPath) => {
     if (!imgPath) return null;
     if (/^https?:\/\//.test(imgPath)) return imgPath;
-    return `http://localhost:5000${imgPath}`;
+    return `https://shower-quote-backend.onrender.com${imgPath}`;
+    
   };
 
   // Generate Quote Text (with actual values)
