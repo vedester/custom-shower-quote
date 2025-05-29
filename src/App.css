@@ -12,7 +12,7 @@
 /* Only keep truly unique, non-Tailwind class names: */
 
 
-/* .model-image {
+.model-image {
   max-height: 200px;
   object-fit: contain;
   width: 100%;
@@ -32,4 +32,4 @@ body {
 
 img {
   border-radius: 8px;
-} */
+}

@@ -1,41 +1,38 @@
 import React from "react";
 
+/**
+ * ModelCard displays a model image and name.
+ * The image fits the card area, always contained and centered.
+ */
 const ModelCard = ({ imageSrc, modelName }) => (
   <div
+    className="
+      flex flex-col items-center justify-center
+      w-full h-full
+      bg-white rounded-2xl shadow-lg
+      overflow-hidden
+    "
     style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#fff",
-      borderRadius: "1.5rem",
-      boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-      minHeight: 400,
-      minWidth: 350,
-      maxWidth: 500,
-      margin: "auto",
-      flexDirection: "column",
-      padding: "2rem"
+      boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
     }}
   >
-    {imageSrc ? (
-      <img
-        src={imageSrc}
-        alt={modelName}
-        style={{
-          maxHeight: 340,
-          maxWidth: "100%",
-          objectFit: "contain",
-          borderRadius: "1rem",
-          border: "2px solid #3182ce",
-          boxShadow: "0 6px 20px rgba(49,130,206,0.09)",
-        }}
-      />
-    ) : (
-      <div style={{ color: "#aaa", fontSize: "1.2rem", textAlign: "center" }}>
-        No Image Available
-      </div>
-    )}
-    <div style={{ marginTop: "0.5rem", fontWeight: "600", fontSize: "1.3rem" }}>
+    <div className="flex-1 w-full flex items-center justify-center">
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt={modelName}
+          className="object-contain w-full h-full"
+          style={{
+            background: "#f8fafc"
+          }}
+        />
+      ) : (
+        <div className="text-gray-400 text-lg text-center w-full">
+          No Image Available
+        </div>
+      )}
+    </div>
+    <div className="py-2 font-semibold text-blue-700 text-base sm:text-lg text-center w-full bg-white">
       {modelName || "Model Name"}
     </div>
   </div>
