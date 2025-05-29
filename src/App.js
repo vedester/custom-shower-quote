@@ -84,9 +84,9 @@ function App() {
       : null;
 
     return (
-      <div className="w-full max-w-5xl mx-auto mt-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* LEFT: Model + Quote Summary */}
-        <div className="flex flex-col gap-36">
+      <div className="w-full max-w-5xl mx-auto mt-1 flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
+        {/* LEFT (Desktop): Model Preview + Quote Summary */}
+        <div className="flex flex-col gap-2 sm:sticky sm:top-2">
           {/* Model Preview */}
           <div className="bg-white rounded-xl shadow p-1 h-[170px] flex items-center justify-center">
             <ModelCard
@@ -109,9 +109,9 @@ function App() {
             />
           </div>
         </div>
-
-        {/* RIGHT: Shower Config & Add-ons */}
+        {/* RIGHT: Configurator + Addons */}
         <div className="flex flex-col gap-2">
+          {/* On phones, move content above image & quote summary */}
           <div className="bg-white rounded-xl shadow p-2">
             <h2 className="text-xs font-bold text-blue-700 mb-1">
               {t("Glass Configuration & Add-Ons")}
@@ -130,6 +130,30 @@ function App() {
               addOnQuantities={formData.addOnQuantities}
               onFormChange={handleFormChange}
               addons={addons}
+            />
+          </div>
+        </div>
+        {/* --- Small screens reordering --- */}
+        {/* On mobile, move image preview and quote summary LAST */}
+        <div className="flex flex-col gap-2 sm:hidden">
+          {/* This is visually hidden on sm+ (desktop) and only shows on phones */}
+          <div className="bg-white rounded-xl shadow p-1 h-[170px] flex items-center justify-center">
+            <ModelCard
+              imageSrc={imageSrc}
+              modelName={selectedModel ? selectedModel.name : ""}
+            />
+          </div>
+          <div className="bg-white rounded-xl shadow p-2">
+            <QuoteCalculator
+              customerInfo={customerInfo}
+              formData={formData}
+              glassTypes={glassTypes}
+              finishes={finishes}
+              addOns={addons}
+              prices={prices}
+              models={models}
+              showerTypes={showerTypes}
+              companySettings={{}}
             />
           </div>
         </div>
