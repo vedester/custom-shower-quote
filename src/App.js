@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import QuoteCalculator from './components/QuoteCalculator';
-import ShowerConfigurator from './components/ShowerConfigurator';
-import AddOnsSection from './components/AddOnsSection';
+
+
+// import FindGlassPrice from "./components/Admin/FindGlassPrice";
+import QuoteCalculator from "./components/QuoteCalculator";
+import ShowerConfigurator from "./components/ShowerConfigurator";
+import AddOnsSection from "./components/AddOnsSection";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Gallery from "./pages/Gallery";
 import FAQ from "./pages/FAQ";
 import AdminPanel from "./components/Admin/AdminPanel";
 import CustomerInfoCard from "./components/CustomerInfoCard";
-import './App.css';
-import './i18n/i18n';
-import { useTranslation } from 'react-i18next';
-import axios from 'axios';
-import ModelCard from './components/ModelCard';
+import LoginLogout from "./components/Admin/LoginLogout";
+import "./App.css";
+import "./i18n/i18n";
+import { useTranslation } from "react-i18next";
+import axios from "axios";
+import ModelCard from "./components/ModelCard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 axios.defaults.withCredentials = true;
 
-const API = "https://shower-quote-backend.onrender.com/api";
+// Use the API URL from the environment variable
+const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api";
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -29,43 +35,45 @@ function App() {
   const [glassThicknesses, setGlassThicknesses] = useState([]);
   const [finishes, setFinishes] = useState([]);
   const [addons, setAddons] = useState([]);
-  const [prices, setPrices] = useState([]);
+  // const [prices, setPrices] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/shower-types`).then(res => setShowerTypes(res.data));
-    axios.get(`${API}/models`).then(res => setModels(res.data));
-    axios.get(`${API}/glass-types`).then(res => setGlassTypes(res.data));
-    axios.get(`${API}/glass-thickness`).then(res => setGlassThicknesses(res.data));
-    axios.get(`${API}/finishes`).then(res => setFinishes(res.data));
-    axios.get(`${API}/addons`).then(res => setAddons(res.data));
+    axios.get(`${API}/shower-types`).then((res) => setShowerTypes(res.data));
+    axios.get(`${API}/models`).then((res) => setModels(res.data));
+    axios.get(`${API}/glass-types`).then((res) => setGlassTypes(res.data));
+    axios.get(`${API}/glass-thickness`).then((res) => setGlassThicknesses(res.data));
+    axios.get(`${API}/finishes`).then((res) => setFinishes(res.data));
+    axios.get(`${API}/addons`).then((res) => setAddons(res.data));
   }, []);
+
+
 
   // Form State
   const [customerInfo, setCustomerInfo] = useState({
-    name: '',
-    city: '',
-    phone: ''
+    name: "",
+    city: "",
+    phone: "",
   });
 
   const [formData, setFormData] = useState({
-    showerType: '',
-    model: '',
-    glassType: '',
-    glassThickness: '',
-    hardwareFinish: '',
-    height: '',
-    width: '',
-    length: '',
+    showerType: "",
+    model: "",
+    glassType: "",
+    glassThickness: "",
+    hardwareFinish: "",
+    height: "",
+    width: "",
+    length: "",
     addOnQuantities: {},
-    customAddon: '',
-    photo: null
+    customAddon: "",
+    photo: null,
   });
 
   // Handlers
   const handleFormChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -78,10 +86,11 @@ function App() {
 
   // Main Grid Component
   function MainGrid() {
-    const selectedModel = models.find(m => String(m.id) === String(formData.model));
-    const imageSrc = selectedModel && selectedModel.image_path
-      ? `https://shower-quote-backend.onrender.com${selectedModel.image_path}`
-      : null;
+    const selectedModel = models.find((m) => String(m.id) === String(formData.model));
+    // const imageSrc =
+    //   selectedModel && selectedModel.image_path
+    //     ? `${process.env.REACT_APP_API_URL}${selectedModel.image_path}`
+    //     : null;
 
     return (
       <div className="w-full max-w-5xl mx-auto mt-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -112,7 +121,15 @@ function App() {
         <div className="order-2 sm:order-1 flex flex-col gap-7">
           <div className="bg-white rounded-xl shadow p- h-[200px] flex items-center justify-center">
             <ModelCard
-              imageSrc={imageSrc}
+              imageSrc={
+                selectedModel && selectedModel.image_path
+                  ? // Use the correct backend URL for images.
+                    // If image_path starts with '/', and your backend serves images at /uploads or /static/uploads,
+                    // remove '/api' from the API base URL if present.
+                    `${(process.env.REACT_APP_API_URL || "http://127.0.0.1:5000").replace(/\/api$/, "")}${selectedModel.image_path}`
+                  : // Fallback image to display if there is no model image
+                    "/no-image-placeholder.png"
+              }
               modelName={selectedModel ? selectedModel.name : ""}
             />
           </div>
@@ -121,9 +138,10 @@ function App() {
               customerInfo={customerInfo}
               formData={formData}
               glassTypes={glassTypes}
+              glassThicknesses={glassThicknesses} 
               finishes={finishes}
               addOns={addons}
-              prices={prices}
+              // prices={prices}
               models={models}
               showerTypes={showerTypes}
               companySettings={{}}
@@ -161,7 +179,8 @@ function App() {
                 { to: "/about", label: t("About Us") },
                 { to: "/gallery", label: t("Gallery") },
                 { to: "/faq", label: t("FAQ") },
-                { to: "/contact", label: t("Contact Us") }
+                { to: "/contact", label: t("Contact Us") },
+                
               ].map(({ to, label }) => (
                 <Link
                   key={to}
@@ -178,24 +197,27 @@ function App() {
               >
                 Admin
               </Link>
+              
               {/* Language Switcher */}
               <div className="flex gap-0.5">
                 <button
-                  onClick={() => toggleLanguage('en')}
-                  className={`text-[10px] px-2 py-1 rounded transition font-semibold
-                    ${i18n.language === 'en'
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  onClick={() => toggleLanguage("en")}
+                  className={`text-[10px] px-2 py-1 rounded transition font-semibold ${
+                    i18n.language === "en"
+                      ? "bg-blue-600 text-white shadow"
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  }`}
                   aria-label="Switch to English"
                 >
                   English
                 </button>
                 <button
-                  onClick={() => toggleLanguage('he')}
-                  className={`text-[10px] px-2 py-1 rounded transition font-semibold
-                    ${i18n.language === 'he'
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                  onClick={() => toggleLanguage("he")}
+                  className={`text-[10px] px-2 py-1 rounded transition font-semibold ${
+                    i18n.language === "he"
+                      ? "bg-blue-600 text-white shadow"
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  }`}
                   aria-label="Switch to Hebrew"
                 >
                   עברית
@@ -217,12 +239,21 @@ function App() {
         {/* MAIN CONTENT */}
         <main>
           <Routes>
+            
             <Route path="/" element={<MainGrid />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/faq" element={<FAQ />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/login" element={<LoginLogout />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
       </div>

@@ -1,158 +1,286 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ImageUpload from "./ImageUpload";
-import ModelComponentEditor from "./ModelComponentEditor";
+import api from "./api";
+// import { useTranslation } from "react-i18next"; // Uncomment if i18n is integrated
 
-const API = "https://shower-quote-backend.onrender.com/api";
+const IMAGE_BASE_URL = "http://127.0.0.1:5000"; // Update if needed
 
 const ModelManager = () => {
+  // const { t } = useTranslation(); // Uncomment when using i18n
   const [models, setModels] = useState([]);
-  const [editingModel, setEditingModel] = useState(null);
-  const [showEditor, setShowEditor] = useState(false);
   const [showerTypes, setShowerTypes] = useState([]);
-  const [refresh, setRefresh] = useState(0);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: "", showerTypeId: "", image: null, description: "" });
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [modelRes, typeRes] = await Promise.all([
+        api.get("/models"),
+        api.get("/shower-types"),
+      ]);
+      setModels(modelRes.data);
+      setShowerTypes(typeRes.data);
+    } catch (err) {
+      console.error(err);
+      setFeedback("Failed to load models or shower types.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    axios.get(`${API}/models`).then(res => setModels(res.data));
-    axios.get(`${API}/shower-types`).then(res => setShowerTypes(res.data));
-  }, [refresh]);
+    fetchData();
+  }, []);
 
-  const handleEdit = (model) => {
-    setEditingModel(model);
-    setShowEditor(true);
-  };
-
-  const handleDelete = async (modelId) => {
-    if (window.confirm("Delete this model and all its components?")) {
-      await axios.delete(`${API}/models/${modelId}`);
-      setRefresh(r => r + 1);
-    }
-  };
-
-  const handleSave = async (model) => {
-    if (model.id) {
-      await axios.put(`${API}/models/${model.id}`, model);
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "image") {
+      const file = files[0];
+      if (file && file.size > 2 * 1024 * 1024) {
+        setFeedback("Image must be under 2MB.");
+        return;
+      }
+      setForm((prev) => ({ ...prev, image: file }));
+      setPreview(file ? URL.createObjectURL(file) : null);
     } else {
-      await axios.post(`${API}/models`, model);
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
-    setShowEditor(false);
-    setRefresh(r => r + 1);
   };
+
+  const handleSave = async () => {
+    const { name, showerTypeId, image, description } = form;
+    if (!name.trim() || !showerTypeId) {
+      setFeedback("Model name and shower type are required.");
+      return;
+    }
+
+    if (!editing && !image) {
+      setFeedback("Image is required for new models.");
+      return;
+    }
+
+    setLoading(true);
+    const data = new FormData();
+    data.append("name", name.trim());
+    data.append("showerTypeId", showerTypeId);
+    data.append("description", description || "");
+    if (image) data.append("image", image);
+
+    try {
+      let res;
+      if (editing) {
+        res = await api.put(`/models/${editing.id}`, data);
+        setModels((prev) =>
+          prev.map((m) => (m.id === editing.id ? res.data : m))
+        );
+        setFeedback("Model updated.");
+      } else {
+        res = await api.post("/models", data);
+        setModels((prev) => [...prev, res.data]);
+        setFeedback("Model added.");
+      }
+
+      setPreview(res.data.image_path ? IMAGE_BASE_URL + res.data.image_path : null);
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      setFeedback("Failed to save model.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this model?")) return;
+    setLoading(true);
+    try {
+      await api.delete(`/models/${id}`);
+      setModels((prev) => prev.filter((m) => m.id !== id));
+      setFeedback("Model deleted.");
+      if (editing?.id === id) resetForm();
+    } catch (err) {
+      console.error(err);
+      setFeedback("Failed to delete model.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setEditing(null);
+    setForm({ name: "", showerTypeId: "", image: null, description: "" });
+    setPreview(null);
+    setFeedback("");
+  };
+
+  const isError = feedback.toLowerCase().includes("fail");
+
+  const getModelImage = (m) => m.image_path ? IMAGE_BASE_URL + m.image_path : null;
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-3">Models</h2>
-      <button
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => { setEditingModel({}); setShowEditor(true); }}
-      >
-        Add Model
-      </button>
-      <div className="space-y-4">
-        {models.map(model => (
-          <div key={model.id} className="border p-4 rounded-lg flex">
-            <div className="w-48 h-40 flex-shrink-0 bg-gray-100 mr-4 flex items-center justify-center">
-              {model.image_path ? (
-                <img
-                  src={`https://shower-quote-backend.onrender.com${model.image_path}`}
-                  alt={model.name}
-                  className="object-contain h-full w-full"
-                />
-              ) : (
-                <span className="text-gray-400">No Image</span>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="font-bold">{model.name}</div>
-              <div className="text-sm text-gray-600">{model.description}</div>
-              <div className="text-xs text-gray-400 mt-1">
-                Shower Type: {model.shower_type_name || "-"}
-              </div>
-              <div className="flex mt-2 space-x-2">
-                <button className="px-3 py-1 bg-green-600 text-white rounded" onClick={() => handleEdit(model)}>
+    <div className="bg-white shadow rounded p-6 max-w-3xl mx-auto relative">
+      <h2 className="font-bold text-lg mb-4">Model Management</h2>
+
+      {feedback && (
+        <div
+          className={`mb-4 text-sm px-4 py-2 rounded ${
+            isError ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+          }`}
+        >
+          {feedback}
+        </div>
+      )}
+
+      {loading && (
+        <div className="absolute inset-0 bg-white bg-opacity-60 flex items-center justify-center z-10">
+          <span className="text-sm text-gray-500">Processing...</span>
+        </div>
+      )}
+
+      <p className="text-sm text-gray-500 mb-2">
+        Showing {models.length} model{models.length !== 1 ? "s" : ""}
+      </p>
+
+      <table className={`w-full mb-4 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
+        <thead>
+          <tr className="text-xs text-gray-500 border-b">
+            <th className="text-left py-2">Model</th>
+            <th className="text-left py-2">Shower Type</th>
+            <th className="text-left py-2">Image</th>
+            <th className="text-left py-2">Description</th>
+            <th className="text-right py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {models.map((m) => (
+            <tr key={m.id} className="border-b hover:bg-gray-50">
+              <td className="py-2">{m.name}</td>
+              <td className="py-2">
+                {m.shower_type_name || showerTypes.find((t) => t.id === m.shower_type_id)?.name || "—"}
+              </td>
+              <td className="py-2">
+                {getModelImage(m) ? (
+                  <img
+                    src={getModelImage(m)}
+                    alt="Model"
+                    className="w-16 h-16 object-cover rounded"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.png"; // Optional default
+                    }}
+                  />
+                ) : (
+                  <span className="text-xs text-gray-400">No image</span>
+                )}
+              </td>
+              <td className="py-2 text-sm text-gray-700">{m.description || "—"}</td>
+              <td className="py-2 text-right">
+                <button
+                  className="text-xs text-blue-600 mr-2 hover:underline"
+                  onClick={() => {
+                    setEditing(m);
+                    setForm({
+                      name: m.name,
+                      showerTypeId: m.shower_type_id || m.showerTypeId,
+                      image: null,
+                      description: m.description || "",
+                    });
+                    setPreview(getModelImage(m));
+                    setFeedback("");
+                  }}
+                >
                   Edit
                 </button>
-                <button className="px-3 py-1 bg-red-600 text-white rounded" onClick={() => handleDelete(model.id)}>
+                <button
+                  className="text-xs text-red-600 hover:underline"
+                  onClick={() => handleDelete(m.id)}
+                >
                   Delete
                 </button>
-              </div>
-              {/* Component editor for glass, hardware, seals */}
-              <ModelComponentEditor model={model} refreshModels={() => setRefresh(r => r + 1)} />
-            </div>
-          </div>
-        ))}
-      </div>
-      {showEditor && (
-        <ModelEditDialog
-          model={editingModel}
-          showerTypes={showerTypes}
-          onSave={handleSave}
-          onClose={() => setShowEditor(false)}
-        />
-      )}
-    </div>
-  );
-};
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-const ModelEditDialog = ({ model, showerTypes, onSave, onClose }) => {
-  const [form, setForm] = useState({ ...model });
-  const [uploading, setUploading] = useState(false);
-
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleImageUpload = async file => {
-    setUploading(true);
-    const data = new FormData();
-    data.append("file", file);
-    const res = await axios.post("https://shower-quote-backend.onrender.com/api/upload-image", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    setForm({ ...form, image_path: res.data.image_path });
-    setUploading(false);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-full max-w-lg shadow-xl">
-        <h2 className="font-bold mb-4">{form.id ? "Edit Model" : "Add Model"}</h2>
+      <div className="flex flex-col gap-3">
         <input
-          className="w-full border p-2 mb-2"
+          type="text"
           name="name"
-          placeholder="Model Name"
-          value={form.name || ""}
-          onChange={handleChange}
+          className="border rounded px-3 py-1 text-sm"
+          placeholder="Model name"
+          value={form.name}
+          onChange={handleInputChange}
+          disabled={loading}
         />
-        <input
-          className="w-full border p-2 mb-2"
-          name="description"
-          placeholder="Description"
-          value={form.description || ""}
-          onChange={handleChange}
-        />
+
         <select
-          className="w-full border p-2 mb-2"
-          name="shower_type_id"
-          value={form.shower_type_id || ""}
-          onChange={handleChange}
+          name="showerTypeId"
+          className="border rounded px-3 py-1 text-sm"
+          value={form.showerTypeId}
+          onChange={handleInputChange}
+          disabled={loading}
         >
-          <option value="">Select Shower Type</option>
-          {showerTypes.map(st => (
-            <option key={st.id} value={st.id}>{st.name}</option>
+          <option value="">Select shower type</option>
+          {showerTypes.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.name}
+            </option>
           ))}
         </select>
-        <ImageUpload
-          currentImage={form.image_path}
-          onUpload={handleImageUpload}
-          uploading={uploading}
+
+        <input
+          type="text"
+          name="description"
+          className="border rounded px-3 py-1 text-sm"
+          placeholder="Model description"
+          value={form.description}
+          onChange={handleInputChange}
+          disabled={loading}
         />
-        <div className="flex justify-end space-x-2 mt-4">
-          <button className="px-4 py-2 bg-gray-300 rounded" onClick={onClose}>Cancel</button>
+
+        <input
+          type="file"
+          name="image"
+          accept="image/*"
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+
+        {preview && (
+          <img
+            src={preview}
+            alt="Preview"
+            className="w-32 h-32 object-cover rounded border"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/placeholder.png";
+            }}
+          />
+        )}
+
+        <div className="flex gap-2">
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-            onClick={() => onSave(form)}
+            className={`text-sm px-4 py-2 rounded text-white ${
+              editing ? "bg-blue-600" : "bg-green-600"
+            }`}
+            onClick={handleSave}
+            disabled={loading}
           >
-            Save
+            {editing ? "Update Model" : "Add Model"}
           </button>
+          {editing && (
+            <button
+              className="text-sm px-4 py-2 rounded bg-gray-200 text-gray-700"
+              onClick={resetForm}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     </div>

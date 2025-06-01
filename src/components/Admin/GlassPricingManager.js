@@ -1,119 +1,225 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://shower-quote-backend.onrender.com/api";
+import api from "./api";
 
 const GlassPricingManager = () => {
-  const [pricing, setPricing] = useState([]);
   const [glassTypes, setGlassTypes] = useState([]);
   const [thicknesses, setThicknesses] = useState([]);
-  const [glassTypeId, setGlassTypeId] = useState("");
-  const [thicknessId, setThicknessId] = useState("");
-  const [price, setPrice] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [refresh, setRefresh] = useState(0);
+  const [pricing, setPricing] = useState([]);
+  const [form, setForm] = useState({
+    glass_type_id: "",
+    thickness_id: "",
+    price_per_m2: "",
+  });
+  const [editingId, setEditingId] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    axios.get(`${API}/glass-pricing`).then(r => setPricing(r.data));
-    axios.get(`${API}/glass-types`).then(r => setGlassTypes(r.data));
-    axios.get(`${API}/glass-thickness`).then(r => setThicknesses(r.data));
-  }, [refresh]);
-
-  const save = async () => {
-    if (!glassTypeId || !thicknessId || price === "") return;
-    const payload = {
-      glass_type_id: glassTypeId,
-      thickness_id: thicknessId,
-      price_per_m2: parseFloat(price)
-    };
-    if (editing) {
-      await axios.put(`${API}/glass-pricing/${editing.id}`, payload, { withCredentials: true });
-    } else {
-      await axios.post(`${API}/glass-pricing`, payload, { withCredentials: true });
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [typesRes, thicknessesRes, pricingRes] = await Promise.all([
+        api.get("/glass-types"),
+        api.get("/glass-thickness"),
+        api.get("/glass-pricing"),
+      ]);
+      setGlassTypes(typesRes.data);
+      setThicknesses(thicknessesRes.data);
+      setPricing(pricingRes.data);
+    } catch (err) {
+      setFeedback("Failed to fetch data.");
+    } finally {
+      setLoading(false);
     }
-    setEditing(null);
-    setGlassTypeId("");
-    setThicknessId("");
-    setPrice("");
-    setRefresh(r => r + 1);
   };
 
-  const del = async (id) => {
-    if (window.confirm("Delete this price?")) {
-      await axios.delete(`${API}/glass-pricing/${id}`, { withCredentials: true });
-      setRefresh(r => r + 1);
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!form.glass_type_id || !form.thickness_id || !form.price_per_m2) {
+      setFeedback("All fields are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = {
+        glass_type_id: parseInt(form.glass_type_id, 10),
+        thickness_id: parseInt(form.thickness_id, 10),
+        price_per_m2: parseFloat(form.price_per_m2),
+      };
+      if (editingId) {
+        await api.put(`/glass-pricing/${editingId}`, payload);
+        setFeedback("Price updated.");
+      } else {
+        await api.post("/glass-pricing", payload);
+        setFeedback("Price added.");
+      }
+      setForm({ glass_type_id: "", thickness_id: "", price_per_m2: "" });
+      setEditingId(null);
+      fetchAllData();
+    } catch (err) {
+      setFeedback("Failed to save price.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setForm({
+      glass_type_id: item.glass_type_id.toString(),
+      thickness_id: item.thickness_id.toString(),
+      price_per_m2: item.price_per_m2.toString(),
+    });
+    setFeedback("");
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this price entry?")) return;
+    setLoading(true);
+    try {
+      await api.delete(`/glass-pricing/${id}`);
+      setFeedback("Price entry deleted.");
+      fetchAllData();
+      setForm({ glass_type_id: "", thickness_id: "", price_per_m2: "" });
+      setEditingId(null);
+    } catch (err) {
+      setFeedback("Failed to delete price entry.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <table className="w-full mb-2">
+    <div className="bg-white shadow rounded p-6 max-w-2xl mx-auto">
+      <h2 className="font-bold text-lg mb-4">Glass Pricing</h2>
+      {feedback && (
+        <div
+          className={`mb-4 px-4 py-2 rounded text-sm ${
+            feedback.toLowerCase().includes("fail")
+              ? "bg-red-100 text-red-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {feedback}
+        </div>
+      )}
+
+      <table className="w-full text-sm mb-4">
         <thead>
-          <tr className="text-xs text-gray-500">
-            <th>Glass Type</th>
-            <th>Thickness</th>
-            <th>Price/m²</th>
-            <th></th>
+          <tr className="text-xs text-gray-500 border-b">
+            <th className="text-left py-2">Glass Type</th>
+            <th className="text-left py-2">Thickness</th>
+            <th className="text-left py-2">Price (per m²)</th>
+            <th className="text-right py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {pricing.map(p => (
-            <tr key={p.id}>
-              <td>{p.glass_type_name}</td>
-              <td>{p.thickness_mm} mm</td>
-              <td>{p.price_per_m2}</td>
-              <td>
-                <button className="text-xs text-blue-600" onClick={() => {
-                  setEditing(p);
-                  setGlassTypeId(p.glass_type_id);
-                  setThicknessId(p.thickness_id);
-                  setPrice(p.price_per_m2);
-                }}>Edit</button>
-                {" "}
-                <button className="text-xs text-red-600" onClick={() => del(p.id)}>Delete</button>
+          {pricing.map((item) => (
+            <tr key={item.id} className="border-b hover:bg-gray-50">
+              <td className="py-2">{item.glass_type}</td>
+              <td className="py-2">{item.thickness_mm} mm</td>
+              <td className="py-2">${item.price_per_m2}</td>
+              <td className="py-2 text-right">
+                <button
+                  className="text-xs text-blue-600 mr-2 hover:underline"
+                  onClick={() => handleEdit(item)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-xs text-red-600 hover:underline"
+                  onClick={() => handleDelete(item.id)}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
-          <tr>
-            <td>
-              <select className="border px-1 py-0.5 text-xs w-full"
-                value={glassTypeId}
-                onChange={e => setGlassTypeId(e.target.value)}>
-                <option value="">Glass type</option>
-                {glassTypes.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
-            </td>
-            <td>
-              <select className="border px-1 py-0.5 text-xs w-full"
-                value={thicknessId}
-                onChange={e => setThicknessId(e.target.value)}>
-                <option value="">Thickness</option>
-                {thicknesses.map(t => (
-                  <option key={t.id} value={t.id}>{t.thickness_mm} mm</option>
-                ))}
-              </select>
-            </td>
-            <td>
-              <input className="border px-1 py-0.5 text-xs w-full"
-                value={price}
-                type="number"
-                min="0"
-                step="0.01"
-                onChange={e => setPrice(e.target.value)}
-                placeholder="Price/m²"
-              />
-            </td>
-            <td>
-              <button className="text-xs text-green-600" onClick={save}>{editing ? "Update" : "Add"}</button>
-              {editing && <button className="text-xs text-gray-500 ml-2" onClick={() => {
-                setEditing(null); setGlassTypeId(""); setThicknessId(""); setPrice("");
-              }}>Cancel</button>}
-            </td>
-          </tr>
+          {pricing.length === 0 && (
+            <tr>
+              <td colSpan="4" className="text-center py-4 text-gray-400">
+                No pricing entries defined yet.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
+
+      {/* Add/Edit Form */}
+      <div className="flex gap-3 mb-4">
+        <select
+          name="glass_type_id"
+          className="border rounded px-3 py-1 w-1/3 text-sm"
+          value={form.glass_type_id}
+          onChange={handleInputChange}
+          disabled={loading}
+        >
+          <option value="">-- Glass Type --</option>
+          {glassTypes.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.name}
+            </option>
+          ))}
+        </select>
+        <select
+          name="thickness_id"
+          className="border rounded px-3 py-1 w-1/3 text-sm"
+          value={form.thickness_id}
+          onChange={handleInputChange}
+          disabled={loading}
+        >
+          <option value="">-- Thickness --</option>
+          {thicknesses.map((th) => (
+            <option key={th.id} value={th.id}>
+              {th.thickness_mm} mm
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          name="price_per_m2"
+          className="border rounded px-3 py-1 w-1/3 text-sm"
+          placeholder="Price per m²"
+          value={form.price_per_m2}
+          onChange={handleInputChange}
+          disabled={loading}
+          min={0}
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          className={`text-sm px-4 py-2 rounded text-white ${
+            editingId ? "bg-blue-600" : "bg-green-600"
+          }`}
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {editingId ? "Update" : "Add"}
+        </button>
+        {editingId && (
+          <button
+            className="text-sm px-4 py-2 rounded bg-gray-200 text-gray-700"
+            onClick={() => {
+              setForm({ glass_type_id: "", thickness_id: "", price_per_m2: "" });
+              setEditingId(null);
+              setFeedback("");
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </div>
   );
 };

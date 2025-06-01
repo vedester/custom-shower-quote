@@ -1,111 +1,188 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://shower-quote-backend.onrender.com/api";
+import api from "./api";
 
 const AddonManager = () => {
   const [addons, setAddons] = useState([]);
-  const [models, setModels] = useState([]);
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [modelId, setModelId] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [refresh, setRefresh] = useState(0);
+  const [form, setForm] = useState({ name: "", description: "", price: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    axios.get(`${API}/addons`).then(r => setAddons(r.data));
-    axios.get(`${API}/models`).then(r => setModels(r.data));
-  }, [refresh]);
-
-  const save = async () => {
-    if (!name || price === "") return;
-    const payload = { name, price: parseFloat(price), model_id: modelId || null };
-    if (editing) {
-      await axios.put(`${API}/addons/${editing.id}`, payload, { withCredentials: true });
-    } else {
-      await axios.post(`${API}/addons`, payload, { withCredentials: true });
+  const fetchAddons = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/addons");
+      setAddons(res.data);
+    } catch {
+      setFeedback("Failed to fetch add-ons.");
+    } finally {
+      setLoading(false);
     }
-    setEditing(null);
-    setName("");
-    setPrice("");
-    setModelId("");
-    setRefresh(r => r + 1);
   };
 
-  const del = async (id) => {
-    if (window.confirm("Delete this addon?")) {
-      await axios.delete(`${API}/addons/${id}`, { withCredentials: true });
-      setRefresh(r => r + 1);
+  useEffect(() => {
+    fetchAddons();
+  }, []);
+
+  const handleInputChange = e => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.price) {
+      setFeedback("Add-on name and price are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        price: parseFloat(form.price)
+      };
+      if (editingId) {
+        await api.put(`/addons/${editingId}`, payload);
+        setFeedback("Add-on updated.");
+      } else {
+        await api.post("/addons", payload);
+        setFeedback("Add-on added.");
+      }
+      setForm({ name: "", description: "", price: "" });
+      setEditingId(null);
+      fetchAddons();
+    } catch {
+      setFeedback("Failed to save add-on.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = addon => {
+    setEditingId(addon.id);
+    setForm({
+      name: addon.name,
+      description: addon.description || "",
+      price: addon.price.toString()
+    });
+    setFeedback("");
+  };
+
+  const handleDelete = async id => {
+    if (!window.confirm("Delete this add-on?")) return;
+    setLoading(true);
+    try {
+      await api.delete(`/addons/${id}`);
+      setFeedback("Add-on deleted.");
+      setForm({ name: "", description: "", price: "" });
+      setEditingId(null);
+      fetchAddons();
+    } catch {
+      setFeedback("Failed to delete add-on.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2 className="font-bold mb-2">Add-Ons</h2>
-      <table className="w-full mb-2">
+    <div className="bg-white shadow rounded p-6 max-w-2xl mx-auto">
+      <h2 className="font-bold text-lg mb-4">Manage Add-ons</h2>
+      {feedback && (
+        <div className={`mb-4 px-4 py-2 rounded text-sm ${
+          feedback.toLowerCase().includes("fail") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+        }`}>{feedback}</div>
+      )}
+      <table className="w-full text-sm mb-4">
         <thead>
-          <tr className="text-xs text-gray-500">
-            <th>Name</th>
-            <th>Price</th>
-            <th>Model</th>
-            <th></th>
+          <tr className="text-xs text-gray-500 border-b">
+            <th className="text-left py-2">Name</th>
+            <th className="text-left py-2">Description</th>
+            <th className="text-left py-2">Price</th>
+            <th className="text-right py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {addons.map(a => (
-            <tr key={a.id}>
-              <td>{a.name}</td>
-              <td>{a.price}</td>
-              <td>{models.find(m => m.id === a.model_id)?.name || "-"}</td>
-              <td>
-                <button className="text-xs text-blue-600" onClick={() => {
-                  setEditing(a);
-                  setName(a.name);
-                  setPrice(a.price);
-                  setModelId(a.model_id || "");
-                }}>Edit</button>
-                {" "}
-                <button className="text-xs text-red-600" onClick={() => del(a.id)}>Delete</button>
+          {addons.map(addon => (
+            <tr key={addon.id} className="border-b hover:bg-gray-50">
+              <td className="py-2">{addon.name}</td>
+              <td className="py-2">{addon.description}</td>
+              <td className="py-2">₪{addon.price}</td>
+              <td className="py-2 text-right">
+                <button
+                  className="text-xs text-blue-600 mr-2 hover:underline"
+                  onClick={() => handleEdit(addon)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-xs text-red-600 hover:underline"
+                  onClick={() => handleDelete(addon.id)}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
-          <tr>
-            <td>
-              <input className="border px-1 py-0.5 text-xs w-full"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="New addon"
-              />
-            </td>
-            <td>
-              <input className="border px-1 py-0.5 text-xs w-full"
-                value={price}
-                type="number"
-                min="0"
-                step="0.01"
-                onChange={e => setPrice(e.target.value)}
-                placeholder="Price"
-              />
-            </td>
-            <td>
-              <select className="border px-1 py-0.5 text-xs w-full"
-                value={modelId}
-                onChange={e => setModelId(e.target.value)}>
-                <option value="">(None)</option>
-                {models.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            </td>
-            <td>
-              <button className="text-xs text-green-600" onClick={save}>{editing ? "Update" : "Add"}</button>
-              {editing && <button className="text-xs text-gray-500 ml-2" onClick={() => {
-                setEditing(null); setName(""); setPrice(""); setModelId("");
-              }}>Cancel</button>}
-            </td>
-          </tr>
+          {addons.length === 0 && (
+            <tr>
+              <td colSpan={4} className="text-center py-4 text-gray-400">No add-ons defined yet.</td>
+            </tr>
+          )}
         </tbody>
       </table>
+      {/* Add/Edit Form */}
+      <div className="flex flex-col gap-2 mb-2">
+        <input
+          type="text"
+          name="name"
+          className="border rounded px-3 py-1 text-sm"
+          placeholder="Add-on Name"
+          value={form.name}
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+        <input
+          type="text"
+          name="description"
+          className="border rounded px-3 py-1 text-sm"
+          placeholder="Description"
+          value={form.description}
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+        <input
+          type="number"
+          name="price"
+          className="border rounded px-3 py-1 text-sm"
+          placeholder="Price"
+          value={form.price}
+          onChange={handleInputChange}
+          disabled={loading}
+          min={0}
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          className={`text-sm px-4 py-2 rounded text-white ${editingId ? "bg-blue-600" : "bg-green-600"}`}
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {editingId ? "Update" : "Add"}
+        </button>
+        {editingId && (
+          <button
+            className="text-sm px-4 py-2 rounded bg-gray-200 text-gray-700"
+            onClick={() => {
+              setForm({ name: "", description: "", price: "" });
+              setEditingId(null);
+              setFeedback("");
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </div>
   );
 };

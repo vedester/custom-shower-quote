@@ -1,33 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
-const API = "https://shower-quote-backend.onrender.com/api";
-export default function AddOnsSection({ addOnQuantities = {}, onFormChange, onPriceChange }) {
+export default function AddOnsSection({ addons = [], addOnQuantities = {}, onFormChange, onPriceChange }) {
   const { t } = useTranslation();
-
-  const [addOns, setAddOns] = useState([]);
-
-  useEffect(() => {
-    axios.get(`${API}/addons`).then(res => setAddOns(res.data));
-  }, []);
 
   const [localQuantities, setLocalQuantities] = useState({});
   useEffect(() => {
     setLocalQuantities(
-      Object.fromEntries(addOns.map(item => [item.name, addOnQuantities[item.name] || 0]))
+      Object.fromEntries(addons.map(item => [item.name, addOnQuantities[item.name] || 0]))
     );
-  }, [addOns, addOnQuantities]);
+  }, [addons, addOnQuantities]);
 
   useEffect(() => {
-    const totalAddOnsPrice = addOns.reduce(
+    const totalAddOnsPrice = addons.reduce(
       (sum, addOn) => sum + (localQuantities[addOn.name] || 0) * addOn.price,
       0
     );
     if (typeof onPriceChange === 'function') {
       onPriceChange(totalAddOnsPrice);
     }
-  }, [localQuantities, addOns, onPriceChange]);
+  }, [localQuantities, addons, onPriceChange]);
 
   const updateQuantity = (id, delta) => {
     setLocalQuantities(prev => {
@@ -38,7 +30,7 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, onPr
     });
   };
 
-  const totalAddOnsPrice = addOns.reduce(
+  const totalAddOnsPrice = addons.reduce(
     (sum, addOn) => sum + (localQuantities[addOn.name] || 0) * addOn.price,
     0
   );
@@ -47,7 +39,7 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, onPr
     <div className="space-y-6 text-[90%]">
       <div className="bg-gradient-to-r from-white via-gray-50 to-white shadow-xl rounded-2xl p-4 sm:p-6 border border-gray-200">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
-          {addOns.map(addOn => {
+          {addons.map(addOn => {
             const qty = localQuantities[addOn.name] || 0;
             const isSelected = qty > 0;
             return (
@@ -58,7 +50,6 @@ export default function AddOnsSection({ addOnQuantities = {}, onFormChange, onPr
                 } hover:shadow-lg hover:border-blue-400`}
               >
                 <div className="text-center">
-                  {/* Use the human-readable name directly */}
                   <h4 className="text-[10px] font-semibold text-gray-800 leading-tight">{addOn.name}</h4>
                   <p className="text-[9px] text-gray-500 mt-0.5">+₪{addOn.price}</p>
                 </div>
