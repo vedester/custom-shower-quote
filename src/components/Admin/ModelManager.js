@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "./api";
 // import { useTranslation } from "react-i18next"; // Uncomment if i18n is integrated
 
-const IMAGE_BASE_URL = "http://127.0.0.1:5000"; // Update if needed
+const IMAGE_BASE_URL = "https://shower-quote-backend.onrender.com"; // Update if needed
 
 const ModelManager = () => {
   // const { t } = useTranslation(); // Uncomment when using i18n

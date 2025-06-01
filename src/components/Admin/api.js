@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:5000/api", // Set your API URL here
+  baseURL: "https://shower-quote-backend.onrender.com/api", // Set your API URL here
 });
 
 // Add the Authorization header if token is present

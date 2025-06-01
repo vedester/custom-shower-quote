@@ -23,7 +23,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 axios.defaults.withCredentials = true;
 
 // Use the API URL from the environment variable
-const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api";
+const API = process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com/api";
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -126,7 +126,7 @@ function App() {
                   ? // Use the correct backend URL for images.
                     // If image_path starts with '/', and your backend serves images at /uploads or /static/uploads,
                     // remove '/api' from the API base URL if present.
-                    `${(process.env.REACT_APP_API_URL || "http://127.0.0.1:5000").replace(/\/api$/, "")}${selectedModel.image_path}`
+                    `${(process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com").replace(/\/api$/, "")}${selectedModel.image_path}`
                   : // Fallback image to display if there is no model image
                     "/no-image-placeholder.png"
               }

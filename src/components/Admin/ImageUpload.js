@@ -25,6 +25,8 @@ const ImageUpload = ({ currentImage, onUpload, uploading }) => {
               src={
                 currentImage.startsWith("http") || currentImage.startsWith("/")
                   ? `https://shower-quote-backend.onrender.com${currentImage}`
+                  
+                  
                   : currentImage
               }
               alt="Preview"

@@ -92,7 +92,7 @@ const AdminPanel = () => {
   // Fetch glass pricing for test section only
   useEffect(() => {
     if (activeSection === "testGlassPrice") {
-      axios.get("http://127.0.0.1:5000/api/glass-pricing")
+      axios.get("https://shower-quote-backend.onrender.com/api/glass-pricing")
         .then(res => setGlassPricing(res.data))
         .catch(() => setGlassPricing([]));
     }
@@ -101,7 +101,7 @@ const AdminPanel = () => {
   // Fetch hardware pricing for test section only
   useEffect(() => {
     if (activeSection === "testHardwarePrice") {
-      axios.get("http://127.0.0.1:5000/api/hardware-pricing")
+      axios.get("https://shower-quote-backend.onrender.com/api/hardware-pricing")
         .then(res => setHardwarePricing(res.data))
         .catch(() => setHardwarePricing([]));
     }
@@ -110,7 +110,7 @@ const AdminPanel = () => {
   // Fetch add-on pricing for test section only
   useEffect(() => {
     if (activeSection === "testAddonPrice") {
-      axios.get("http://127.0.0.1:5000/api/addon-pricing")
+      axios.get("https://shower-quote-backend.onrender.com/api/addon-pricing")
         .then(res => setAddonPricing(res.data))
         .catch(() => setAddonPricing([]));
     }

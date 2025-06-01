@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api";
+const API = process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com/api";
 
 // Set a default hardware type string for matching in hardware pricing.
 const DEFAULT_HARDWARE_TYPE = "Hardware Type 1";
