@@ -56,7 +56,7 @@ const HardwarePricingManager = () => {
         unit_price: parseFloat(form.unit_price),
       };
       if (editingId) {
-        await api.put(`/hardware-pricing/${editingId}`, payload);
+        await api.put(`/hardware-pricing/₪{editingId}`, payload);
         setFeedback("Price updated.");
       } else {
         await api.post("/hardware-pricing", payload);
@@ -86,7 +86,7 @@ const HardwarePricingManager = () => {
     if (!window.confirm("Delete this price entry?")) return;
     setLoading(true);
     try {
-      await api.delete(`/hardware-pricing/${id}`);
+      await api.delete(`/hardware-pricing/₪{id}`);
       setFeedback("Price entry deleted.");
       setForm({ hardware_type_id: "", finish_id: "", unit_price: "" });
       setEditingId(null);
@@ -102,7 +102,7 @@ const HardwarePricingManager = () => {
     <div className="bg-white shadow rounded p-6 max-w-3xl mx-auto">
       <h2 className="font-bold text-lg mb-4">Hardware Pricing</h2>
       {feedback && (
-        <div className={`mb-4 px-4 py-2 rounded text-sm ${
+        <div className={`mb-4 px-4 py-2 rounded text-sm ₪{
           feedback.toLowerCase().includes("fail")
             ? "bg-red-100 text-red-700"
             : "bg-green-100 text-green-700"
@@ -122,7 +122,7 @@ const HardwarePricingManager = () => {
             <tr key={item.id} className="border-b hover:bg-gray-50">
               <td className="py-2">{item.hardware_type}</td>
               <td className="py-2">{item.finish}</td>
-              <td className="py-2">${item.unit_price}</td>
+              <td className="py-2">₪{item.unit_price}</td>
               <td className="py-2 text-right">
                 <button
                   className="text-xs text-blue-600 mr-2 hover:underline"
@@ -187,7 +187,7 @@ const HardwarePricingManager = () => {
       </div>
       <div className="flex gap-2">
         <button
-          className={`text-sm px-4 py-2 rounded text-white ${
+          className={`text-sm px-4 py-2 rounded text-white ₪{
             editingId ? "bg-blue-600" : "bg-green-600"
           }`}
           onClick={handleSave}

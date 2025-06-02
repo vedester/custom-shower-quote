@@ -104,12 +104,12 @@ const QuoteCalculator = ({
         glassMatch = {
           found: true,
           data: glassPriceObj,
-          calculation: `${glassPriceObj.price_per_m2} × ${area.toFixed(2)}m² = ${glassPrice.toFixed(2)}`
+          calculation: `₪{glassPriceObj.price_per_m2} × ₪{area.toFixed(2)}m² = ₪{glassPrice.toFixed(2)}`
         };
       } else {
         glassMatch = {
           found: false,
-          searchedFor: `${selectedGlassTypeName} ${selectedThicknessMM}mm`
+          searchedFor: `₪{selectedGlassTypeName} ₪{selectedThicknessMM}mm`
         };
       }
     }
@@ -134,7 +134,7 @@ const QuoteCalculator = ({
       } else {
         hardwareMatch = {
           found: false,
-          searchedFor: `${DEFAULT_HARDWARE_TYPE} with ${selectedFinishName} finish`
+          searchedFor: `₪{DEFAULT_HARDWARE_TYPE} with ₪{selectedFinishName} finish`
         };
       }
     }
@@ -153,7 +153,7 @@ const QuoteCalculator = ({
     }
 
     const subtotal = glassPrice + hardwarePrice + addonsPrice;
-    const tax = subtotal * 0.17; // 17% VAT
+    const tax = subtotal * 0.30; // 30% VAT
     const total = subtotal + tax;
 
     setQuote({
@@ -240,10 +240,10 @@ const QuoteCalculator = ({
           <p><span className="font-medium">{t('Model')}:</span> {getSelectedOptionName(_models, _formData.model)}</p>
           <p>
             <span className="font-medium">{t('Glass Type')}:</span>{" "}
-            {getSelectedOptionName(_glassTypes, _formData.glassType)}{_formData.glassThickness ? ` (${_glassThicknesses.find(th => String(th.id) === String(_formData.glassThickness))?.thickness_mm}mm)` : ''}
+            {getSelectedOptionName(_glassTypes, _formData.glassType)}{_formData.glassThickness ? ` (₪{_glassThicknesses.find(th => String(th.id) === String(_formData.glassThickness))?.thickness_mm}mm)` : ''}
           </p>
           <p><span className="font-medium">{t('Hardware Finish')}:</span> {getSelectedOptionName(_finishes, _formData.hardwareFinish)}</p>
-          <p><span className="font-medium">{t('Dimensions')}:</span> {_formData.height}m × {_formData.width}m {_formData.length ? `× ${_formData.length}m` : ''}</p>
+          <p><span className="font-medium">{t('Dimensions')}:</span> {_formData.height}m × {_formData.width}m {_formData.length ? `× ₪{_formData.length}m` : ''}</p>
           {quote.area > 0 && (
             <p><span className="font-medium">{t('Glass Area')}:</span> {quote.area.toFixed(2)} m²</p>
           )}
@@ -284,13 +284,13 @@ const QuoteCalculator = ({
       <div className="space-y-3">
         <div className="flex justify-between items-center py-2 border-b border-gray-200">
           <span className="text-sm">{t('Glass Price') || 'Glass Price'}</span>
-          <span className={`font-medium ${quote.glassPrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
+          <span className={`font-medium ₪{quote.glassPrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
             {formatPrice(quote.glassPrice)}
           </span>
         </div>
         <div className="flex justify-between items-center py-2 border-b border-gray-200">
           <span className="text-sm">{t('Hardware Price') || 'Hardware Price'}</span>
-          <span className={`font-medium ${quote.hardwarePrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
+          <span className={`font-medium ₪{quote.hardwarePrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
             {formatPrice(quote.hardwarePrice)}
           </span>
         </div>
@@ -305,7 +305,7 @@ const QuoteCalculator = ({
           <span className="font-semibold text-gray-800">{formatPrice(quote.subtotal)}</span>
         </div>
         <div className="flex justify-between items-center py-2 border-b border-gray-300">
-          <span className="text-sm text-gray-600">{t('VAT (17%)') || 'VAT (17%)'}</span>
+          <span className="text-sm text-gray-600">{t('VAT (30%)') || 'VAT (30%)'}</span>
           <span className="text-gray-600">{formatPrice(quote.tax)}</span>
         </div>
         <div className="flex justify-between items-center py-3 bg-blue-100 rounded-lg px-3 border-2 border-blue-300">

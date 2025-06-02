@@ -57,7 +57,7 @@ const GlassPricingManager = () => {
         price_per_m2: parseFloat(form.price_per_m2),
       };
       if (editingId) {
-        await api.put(`/glass-pricing/${editingId}`, payload);
+        await api.put(`/glass-pricing/₪{editingId}`, payload);
         setFeedback("Price updated.");
       } else {
         await api.post("/glass-pricing", payload);
@@ -87,7 +87,7 @@ const GlassPricingManager = () => {
     if (!window.confirm("Delete this price entry?")) return;
     setLoading(true);
     try {
-      await api.delete(`/glass-pricing/${id}`);
+      await api.delete(`/glass-pricing/₪{id}`);
       setFeedback("Price entry deleted.");
       fetchAllData();
       setForm({ glass_type_id: "", thickness_id: "", price_per_m2: "" });
@@ -104,7 +104,7 @@ const GlassPricingManager = () => {
       <h2 className="font-bold text-lg mb-4">Glass Pricing</h2>
       {feedback && (
         <div
-          className={`mb-4 px-4 py-2 rounded text-sm ${
+          className={`mb-4 px-4 py-2 rounded text-sm ₪{
             feedback.toLowerCase().includes("fail")
               ? "bg-red-100 text-red-700"
               : "bg-green-100 text-green-700"
@@ -128,7 +128,7 @@ const GlassPricingManager = () => {
             <tr key={item.id} className="border-b hover:bg-gray-50">
               <td className="py-2">{item.glass_type}</td>
               <td className="py-2">{item.thickness_mm} mm</td>
-              <td className="py-2">${item.price_per_m2}</td>
+              <td className="py-2">₪{item.price_per_m2}</td>
               <td className="py-2 text-right">
                 <button
                   className="text-xs text-blue-600 mr-2 hover:underline"
@@ -198,7 +198,7 @@ const GlassPricingManager = () => {
       </div>
       <div className="flex gap-2">
         <button
-          className={`text-sm px-4 py-2 rounded text-white ${
+          className={`text-sm px-4 py-2 rounded text-white ₪{
             editingId ? "bg-blue-600" : "bg-green-600"
           }`}
           onClick={handleSave}
