@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com/api";
+import api from "./api"; // <-- use your centralized api.js
 
 const LoginLogout = () => {
   const [username, setUsername] = useState("");
@@ -20,14 +18,14 @@ const LoginLogout = () => {
       const [, payload] = token.split(".");
       const decoded = JSON.parse(atob(payload));
       const currentTime = Math.floor(Date.now() / 1000);
-      return decoded.exp > currentTime; // Check if the token is expired
+      return decoded.exp > currentTime;
     } catch (err) {
       return false;
     }
   };
 
   // If already logged in, redirect to /admin
-  React.useEffect(() => {
+  useEffect(() => {
     if (token && isTokenValid()) {
       navigate("/admin", { replace: true });
     }
@@ -42,18 +40,17 @@ const LoginLogout = () => {
       return;
     }
     try {
-      const response = await axios.post(`${API_URL}/login`, { username, password });
+      const response = await api.post("/login", { username, password });
       const { access_token } = response.data;
       localStorage.setItem("token", access_token);
       setError("");
-      // Redirect to /admin after successful login
       navigate("/admin", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Invalid username or password.");
     }
   };
 
-  // Handle Logout
+  // Handle Logout (not used on this page, but could be exported if needed)
   const handleLogout = () => {
     localStorage.removeItem("token");
     alert("You have been logged out!");

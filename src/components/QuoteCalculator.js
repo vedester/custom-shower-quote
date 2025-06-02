@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
-
-const API = process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com/api";
+import api from './Admin/api'; // <--- Use your centralized API connector
 
 // Set a default hardware type string for matching in hardware pricing.
 const DEFAULT_HARDWARE_TYPE = "Hardware Type 1";
@@ -57,9 +55,9 @@ const QuoteCalculator = ({
       try {
         setLoading(true);
         const [glassRes, hardwareRes, addonRes] = await Promise.all([
-          axios.get(`${API}/glass-pricing`),
-          axios.get(`${API}/hardware-pricing`),
-          axios.get(`${API}/addons`)
+          api.get('/glass-pricing'),
+          api.get('/hardware-pricing'),
+          api.get('/addons')
         ]);
         setGlassPricing(Array.isArray(glassRes.data) ? glassRes.data : []);
         setHardwarePricing(Array.isArray(hardwareRes.data) ? hardwareRes.data : []);

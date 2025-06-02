@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "./api";
 
 import ShowerTypeManager from "./ShowerTypeManager";
 import ModelManager from "./ModelManager";
@@ -14,6 +14,9 @@ import GlassThicknessManager from "./GlassThicknessManager";
 import FinishManager from "./FinishManager";
 import HardwareTypeManager from "./HardwareTypeManager";
 import HardwarePricingManager from "./HardwarePricingManager";
+import SealPricingManager from "./SealPricingManager";
+// Gasket pricing management
+import GasketPricingManager from "./GasketPricingManager";
 
 // Add-ons management component
 import AddonManager from "./AddonManager";
@@ -25,7 +28,7 @@ import FindGlassPrice from "./FindGlassPrice";
 import FindHardwarePrice from "./FindHardwarePrice";
 
 // Add-on price tester for admin (testing only)
-import FindAddonPrice from "./FindAddonPrice"; // <-- Add this import
+import FindAddonPrice from "./FindAddonPrice";
 
 // Placeholder components
 const Dashboard = () => <div><h2>Dashboard</h2><p>Welcome to the Admin Panel!</p></div>;
@@ -39,7 +42,7 @@ const AdminPanel = () => {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [glassPricing, setGlassPricing] = useState([]);
   const [hardwarePricing, setHardwarePricing] = useState([]);
-  const [addonPricing, setAddonPricing] = useState([]); // <-- Add this state
+  const [addonPricing, setAddonPricing] = useState([]);
   const navigate = useNavigate();
 
   const navItems = [
@@ -54,6 +57,8 @@ const AdminPanel = () => {
     { key: "finishes", label: "Hardware Finishes" },
     { key: "hardwareTypes", label: "Hardware Types" },
     { key: "hardwarePricing", label: "Hardware Pricing" },
+    // Gasket management
+    { key: "gasketPricing", label: "Gasket Pricing" },
     // Other pricing sections
     { key: "sealPricing", label: "Seal Pricing" },
     // Others
@@ -63,7 +68,7 @@ const AdminPanel = () => {
     // TESTING ONLY
     { key: "testGlassPrice", label: "Test Glass Price" },
     { key: "testHardwarePrice", label: "Test Hardware Price" },
-    { key: "testAddonPrice", label: "Test Add-On Price" }, // <-- Add this nav item
+    { key: "testAddonPrice", label: "Test Add-On Price" },
   ];
 
   useEffect(() => {
@@ -92,7 +97,7 @@ const AdminPanel = () => {
   // Fetch glass pricing for test section only
   useEffect(() => {
     if (activeSection === "testGlassPrice") {
-      axios.get("https://shower-quote-backend.onrender.com/api/glass-pricing")
+      api.get("/glass-pricing")
         .then(res => setGlassPricing(res.data))
         .catch(() => setGlassPricing([]));
     }
@@ -101,7 +106,7 @@ const AdminPanel = () => {
   // Fetch hardware pricing for test section only
   useEffect(() => {
     if (activeSection === "testHardwarePrice") {
-      axios.get("https://shower-quote-backend.onrender.com/api/hardware-pricing")
+      api.get("/hardware-pricing")
         .then(res => setHardwarePricing(res.data))
         .catch(() => setHardwarePricing([]));
     }
@@ -110,7 +115,7 @@ const AdminPanel = () => {
   // Fetch add-on pricing for test section only
   useEffect(() => {
     if (activeSection === "testAddonPrice") {
-      axios.get("https://shower-quote-backend.onrender.com/api/addon-pricing")
+      api.get("/addon-pricing")
         .then(res => setAddonPricing(res.data))
         .catch(() => setAddonPricing([]));
     }
@@ -141,8 +146,10 @@ const AdminPanel = () => {
         return <HardwareTypeManager />;
       case "hardwarePricing":
         return <HardwarePricingManager />;
+      case "gasketPricing":
+        return <GasketPricingManager />;
       case "sealPricing":
-        return <SealPricingManagement />;
+        return <SealPricingManager />;
       case "addons":
         return <AddonManager />;
       case "gallery":

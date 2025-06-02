@@ -1,193 +1,226 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://shower-quote-backend.onrender.com/api";
+import api from "./api";
 
 const GasketPricingManager = () => {
   const [gasketPricing, setGasketPricing] = useState([]);
-  const [gasketTypes, setGasketTypes] = useState([]);
-  const [colors, setColors] = useState([
-    "Black",
-    "White",
-    "Transparent",
-    "Grey",
-    "Beige",
-  ]);
-  const [gasketTypeId, setGasketTypeId] = useState("");
-  const [color, setColor] = useState("");
-  const [price, setPrice] = useState("");
-  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({
+    gasket_type: "",
+    color: "",
+    quantity: 1,
+    unit_price: "",
+  });
+  const [editingId, setEditingId] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Fetch all data for gaskets and pricing
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [pricingRes, gasketTypesRes] = await Promise.all([
-          axios.get(`${API}/gasket-pricing`),
-          axios.get(`${API}/gasket-types`),
-        ]);
-
-        setGasketPricing(pricingRes.data);
-        setGasketTypes(gasketTypesRes.data);
-      } catch (error) {
-        console.error("Error fetching gasket data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Add or update gasket pricing
-  const saveGasketPricing = async () => {
-    if (!gasketTypeId || !color || price === "") return;
-
-    const payload = {
-      gasket_type_id: gasketTypeId,
-      color,
-      unit_price: parseFloat(price),
-    };
-
+  // Fetch gasket pricing table
+  const fetchPricing = async () => {
+    setLoading(true);
     try {
-      if (editing) {
-        // Update pricing
-        await axios.put(
-          `${API}/gasket-pricing/${editing.id}`,
-          payload
-        );
-        setGasketPricing((prev) =>
-          prev.map((p) => (p.id === editing.id ? { ...p, ...payload } : p))
-        );
-      } else {
-        // Add new pricing
-        const response = await axios.post(`${API}/gasket-pricing`, payload);
-        setGasketPricing((prev) => [...prev, response.data]);
-      }
-
-      // Clear form
-      setEditing(null);
-      setGasketTypeId("");
-      setColor("");
-      setPrice("");
-    } catch (error) {
-      console.error("Error saving gasket pricing:", error);
+      const pricingRes = await api.get("/gasket-pricing");
+      setGasketPricing(pricingRes.data);
+    } catch {
+      setFeedback("Failed to fetch gasket pricing.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Delete gasket pricing
-  const deleteGasketPricing = async (id) => {
-    if (!window.confirm("Delete this gasket price?")) return;
+  useEffect(() => {
+    fetchPricing();
+  }, []);
 
+  // Handle changes in form fields
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "quantity" ? Number(value) : value,
+    }));
+  };
+
+  // Save (add or update) gasket pricing row
+  const handleSave = async () => {
+    if (!form.gasket_type.trim() || !form.color.trim() || !form.unit_price || form.quantity < 1) {
+      setFeedback("Please fill all fields correctly.");
+      return;
+    }
+    setLoading(true);
     try {
-      await axios.delete(`${API}/gasket-pricing/${id}`);
-      setGasketPricing((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error("Error deleting gasket pricing:", error);
+      const payload = {
+        gasket_type: form.gasket_type,
+        color: form.color,
+        quantity: Number(form.quantity),
+        unit_price: parseFloat(form.unit_price),
+      };
+      if (editingId) {
+        await api.put(`/gasket-pricing/${editingId}`, payload);
+        setFeedback("Gasket pricing updated.");
+      } else {
+        await api.post("/gasket-pricing", payload);
+        setFeedback("Gasket pricing added.");
+      }
+      setForm({ gasket_type: "", color: "", quantity: 1, unit_price: "" });
+      setEditingId(null);
+      fetchPricing();
+    } catch {
+      setFeedback("Failed to save gasket pricing.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Populate form for editing
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setForm({
+      gasket_type: item.gasket_type || "",
+      color: item.color || "",
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price ? item.unit_price.toString() : "",
+    });
+    setFeedback("");
+  };
+
+  // Delete a gasket pricing entry
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this gasket price entry?")) return;
+    setLoading(true);
+    try {
+      await api.delete(`/gasket-pricing/${id}`);
+      setFeedback("Gasket price entry deleted.");
+      setForm({ gasket_type: "", color: "", quantity: 1, unit_price: "" });
+      setEditingId(null);
+      fetchPricing();
+    } catch {
+      setFeedback("Failed to delete gasket price entry.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2 className="font-bold mb-2">Gasket Pricing</h2>
-      <table className="w-full mb-2">
-        <thead>
-          <tr className="text-xs text-gray-500">
-            <th>Gasket Type</th>
-            <th>Color</th>
-            <th>Unit Price</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {gasketPricing.map((p) => (
-            <tr key={p.id}>
-              <td>{p.gasket_type_name}</td>
-              <td>{p.color}</td>
-              <td>{p.unit_price}</td>
-              <td>
-                <button
-                  className="text-xs text-blue-600"
-                  onClick={() => {
-                    setEditing(p);
-                    setGasketTypeId(p.gasket_type_id);
-                    setColor(p.color);
-                    setPrice(p.unit_price);
-                  }}
-                >
-                  Edit
-                </button>{" "}
-                <button
-                  className="text-xs text-red-600"
-                  onClick={() => deleteGasketPricing(p.id)}
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="bg-white rounded shadow p-6 max-w-4xl mx-auto">
+      <h2 className="font-bold text-lg mb-4">Gasket Pricing</h2>
+      {feedback && (
+        <div className={`mb-4 px-4 py-2 rounded text-sm ${
+          feedback.toLowerCase().includes("fail")
+            ? "bg-red-100 text-red-700"
+            : "bg-green-100 text-green-700"
+        }`}>{feedback}</div>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse text-sm mb-4">
+          <thead>
+            <tr className="text-xs text-gray-700 border-b bg-gray-100">
+              <th className="py-2 px-3 text-left">Gasket Type</th>
+              <th className="py-2 px-3 text-left">Color</th>
+              <th className="py-2 px-3 text-left">Quantity</th>
+              <th className="py-2 px-3 text-left">Unit Price</th>
+              <th className="py-2 px-3 text-right">Actions</th>
             </tr>
-          ))}
-          <tr>
-            <td>
-              <select
-                className="border px-1 py-0.5 text-xs w-full"
-                value={gasketTypeId}
-                onChange={(e) => setGasketTypeId(e.target.value)}
-              >
-                <option value="">Gasket type</option>
-                {gasketTypes.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </td>
-            <td>
-              <select
-                className="border px-1 py-0.5 text-xs w-full"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-              >
-                <option value="">Color</option>
-                {colors.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </td>
-            <td>
-              <input
-                className="border px-1 py-0.5 text-xs w-full"
-                value={price}
-                type="number"
-                min="0"
-                step="0.01"
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Unit Price"
-              />
-            </td>
-            <td>
-              <button
-                className="text-xs text-green-600"
-                onClick={saveGasketPricing}
-              >
-                {editing ? "Update" : "Add"}
-              </button>
-              {editing && (
-                <button
-                  className="text-xs text-gray-500 ml-2"
-                  onClick={() => {
-                    setEditing(null);
-                    setGasketTypeId("");
-                    setColor("");
-                    setPrice("");
-                  }}
-                >
-                    Cancel
-                </button>
-              )}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {gasketPricing.map((item) => (
+              <tr key={item.id} className="border-b hover:bg-gray-50">
+                <td className="py-2 px-3">{item.gasket_type}</td>
+                <td className="py-2 px-3">{item.color}</td>
+                <td className="py-2 px-3">{item.quantity}</td>
+                <td className="py-2 px-3">{item.unit_price}</td>
+                <td className="py-2 px-3 text-right">
+                  <button
+                    className="text-xs text-blue-600 mr-2 hover:underline"
+                    onClick={() => handleEdit(item)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-xs text-red-600 hover:underline"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {gasketPricing.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-center py-4 text-gray-400">
+                  No gasket pricing entries defined yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add/Edit Form */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <input
+          name="gasket_type"
+          type="text"
+          className="border rounded px-3 py-1 flex-1 min-w-[130px] text-sm"
+          placeholder="Gasket type"
+          value={form.gasket_type}
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+        <input
+          name="color"
+          type="text"
+          className="border rounded px-3 py-1 flex-1 min-w-[110px] text-sm"
+          placeholder="Color"
+          value={form.color}
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+        <input
+          name="quantity"
+          type="number"
+          className="border rounded px-3 py-1 w-24 text-sm"
+          placeholder="Qty"
+          value={form.quantity}
+          min={1}
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+        <input
+          name="unit_price"
+          type="number"
+          className="border rounded px-3 py-1 w-32 text-sm"
+          placeholder="Unit Price"
+          value={form.unit_price}
+          min={0}
+          step="0.01"
+          onChange={handleInputChange}
+          disabled={loading}
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          className={`text-sm px-5 py-2 rounded text-white ${
+            editingId ? "bg-blue-600" : "bg-green-600"
+          }`}
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {editingId ? "Update" : "Add"}
+        </button>
+        {editingId && (
+          <button
+            className="text-sm px-5 py-2 rounded bg-gray-200 text-gray-700"
+            onClick={() => {
+              setForm({ gasket_type: "", color: "", quantity: 1, unit_price: "" });
+              setEditingId(null);
+              setFeedback("");
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </div>
   );
 };

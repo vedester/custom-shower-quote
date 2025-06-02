@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-
-// import FindGlassPrice from "./components/Admin/FindGlassPrice";
 import QuoteCalculator from "./components/QuoteCalculator";
 import ShowerConfigurator from "./components/ShowerConfigurator";
 import AddOnsSection from "./components/AddOnsSection";
@@ -16,14 +14,10 @@ import LoginLogout from "./components/Admin/LoginLogout";
 import "./App.css";
 import "./i18n/i18n";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
+// Use the centralized API connector
+import api,{ API_BASE_URL }  from "./components/Admin/api";
 import ModelCard from "./components/ModelCard";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-axios.defaults.withCredentials = true;
-
-// Use the API URL from the environment variable
-const API = process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com/api";
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -35,18 +29,15 @@ function App() {
   const [glassThicknesses, setGlassThicknesses] = useState([]);
   const [finishes, setFinishes] = useState([]);
   const [addons, setAddons] = useState([]);
-  // const [prices, setPrices] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API}/shower-types`).then((res) => setShowerTypes(res.data));
-    axios.get(`${API}/models`).then((res) => setModels(res.data));
-    axios.get(`${API}/glass-types`).then((res) => setGlassTypes(res.data));
-    axios.get(`${API}/glass-thickness`).then((res) => setGlassThicknesses(res.data));
-    axios.get(`${API}/finishes`).then((res) => setFinishes(res.data));
-    axios.get(`${API}/addons`).then((res) => setAddons(res.data));
+    api.get("/shower-types").then((res) => setShowerTypes(res.data));
+    api.get("/models").then((res) => setModels(res.data));
+    api.get("/glass-types").then((res) => setGlassTypes(res.data));
+    api.get("/glass-thickness").then((res) => setGlassThicknesses(res.data));
+    api.get("/finishes").then((res) => setFinishes(res.data));
+    api.get("/addons").then((res) => setAddons(res.data));
   }, []);
-
-
 
   // Form State
   const [customerInfo, setCustomerInfo] = useState({
@@ -87,10 +78,6 @@ function App() {
   // Main Grid Component
   function MainGrid() {
     const selectedModel = models.find((m) => String(m.id) === String(formData.model));
-    // const imageSrc =
-    //   selectedModel && selectedModel.image_path
-    //     ? `${process.env.REACT_APP_API_URL}${selectedModel.image_path}`
-    //     : null;
 
     return (
       <div className="w-full max-w-5xl mx-auto mt-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -123,12 +110,8 @@ function App() {
             <ModelCard
               imageSrc={
                 selectedModel && selectedModel.image_path
-                  ? // Use the correct backend URL for images.
-                    // If image_path starts with '/', and your backend serves images at /uploads or /static/uploads,
-                    // remove '/api' from the API base URL if present.
-                    `${(process.env.REACT_APP_API_URL || "https://shower-quote-backend.onrender.com").replace(/\/api$/, "")}${selectedModel.image_path}`
-                  : // Fallback image to display if there is no model image
-                    "/no-image-placeholder.png"
+                  ? `${API_BASE_URL}${selectedModel.image_path}`
+                  : "/no-image-placeholder.png"
               }
               modelName={selectedModel ? selectedModel.name : ""}
             />
@@ -138,10 +121,9 @@ function App() {
               customerInfo={customerInfo}
               formData={formData}
               glassTypes={glassTypes}
-              glassThicknesses={glassThicknesses} 
+              glassThicknesses={glassThicknesses}
               finishes={finishes}
               addOns={addons}
-              // prices={prices}
               models={models}
               showerTypes={showerTypes}
               companySettings={{}}
@@ -180,7 +162,6 @@ function App() {
                 { to: "/gallery", label: t("Gallery") },
                 { to: "/faq", label: t("FAQ") },
                 { to: "/contact", label: t("Contact Us") },
-                
               ].map(({ to, label }) => (
                 <Link
                   key={to}
@@ -197,7 +178,7 @@ function App() {
               >
                 Admin
               </Link>
-              
+
               {/* Language Switcher */}
               <div className="flex gap-0.5">
                 <button
@@ -239,7 +220,6 @@ function App() {
         {/* MAIN CONTENT */}
         <main>
           <Routes>
-            
             <Route path="/" element={<MainGrid />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
