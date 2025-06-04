@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import api from "./api";
 
 const SealPricingManager = () => {
+  const [sealTypes, setSealTypes] = useState([]);
   const [sealPricing, setSealPricing] = useState([]);
   const [form, setForm] = useState({
-    seal_type: "",
-    finish: "",
+    seal_type_id: "",
     quantity: 1,
     unit_price: "",
   });
@@ -13,19 +13,24 @@ const SealPricingManager = () => {
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fetchPricing = async () => {
+  // Fetch all options and pricing entries
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const pricingRes = await api.get("/seal-pricing");
+      const [sealTypesRes, pricingRes] = await Promise.all([
+        api.get("/seal-types"),
+        api.get("/seal-pricing"),
+      ]);
+      setSealTypes(sealTypesRes.data);
       setSealPricing(pricingRes.data);
     } catch {
-      setFeedback("Failed to fetch seal pricing.");
+      setFeedback("Failed to fetch seal pricing data.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchPricing(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,15 +41,14 @@ const SealPricingManager = () => {
   };
 
   const handleSave = async () => {
-    if (!form.seal_type.trim() || !form.finish.trim() || !form.unit_price || form.quantity < 1) {
+    if (!form.seal_type_id || !form.unit_price || form.quantity < 1) {
       setFeedback("Please fill all fields correctly.");
       return;
     }
     setLoading(true);
     try {
       const payload = {
-        seal_type: form.seal_type,
-        finish: form.finish,
+        seal_type_id: parseInt(form.seal_type_id, 10),
         quantity: Number(form.quantity),
         unit_price: parseFloat(form.unit_price),
       };
@@ -55,9 +59,9 @@ const SealPricingManager = () => {
         await api.post("/seal-pricing", payload);
         setFeedback("Seal pricing added.");
       }
-      setForm({ seal_type: "", finish: "", quantity: 1, unit_price: "" });
+      setForm({ seal_type_id: "", quantity: 1, unit_price: "" });
       setEditingId(null);
-      fetchPricing();
+      fetchAll();
     } catch {
       setFeedback("Failed to save seal pricing.");
     } finally {
@@ -68,8 +72,7 @@ const SealPricingManager = () => {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setForm({
-      seal_type: item.seal_type || "",
-      finish: item.finish || "",
+      seal_type_id: item.seal_type_id?.toString() || "",
       quantity: item.quantity || 1,
       unit_price: item.unit_price ? item.unit_price.toString() : "",
     });
@@ -82,9 +85,9 @@ const SealPricingManager = () => {
     try {
       await api.delete(`/seal-pricing/${id}`);
       setFeedback("Seal price entry deleted.");
-      setForm({ seal_type: "", finish: "", quantity: 1, unit_price: "" });
+      setForm({ seal_type_id: "", quantity: 1, unit_price: "" });
       setEditingId(null);
-      fetchPricing();
+      fetchAll();
     } catch {
       setFeedback("Failed to delete seal price entry.");
     } finally {
@@ -93,13 +96,11 @@ const SealPricingManager = () => {
   };
 
   return (
-    <div className="bg-white rounded shadow p-6 max-w-4xl mx-auto">
+    <div className="bg-white rounded shadow p-6 max-w-3xl mx-auto">
       <h2 className="font-bold text-lg mb-4">Seal Pricing</h2>
       {feedback && (
         <div className={`mb-4 px-4 py-2 rounded text-sm ${
-          feedback.toLowerCase().includes("fail")
-            ? "bg-red-100 text-red-700"
-            : "bg-green-100 text-green-700"
+          feedback.toLowerCase().includes("fail") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
         }`}>{feedback}</div>
       )}
       <div className="overflow-x-auto">
@@ -107,7 +108,6 @@ const SealPricingManager = () => {
           <thead>
             <tr className="text-xs text-gray-700 border-b bg-gray-100">
               <th className="py-2 px-3 text-left">Seal Type</th>
-              <th className="py-2 px-3 text-left">Finish</th>
               <th className="py-2 px-3 text-left">Quantity</th>
               <th className="py-2 px-3 text-left">Unit Price</th>
               <th className="py-2 px-3 text-right">Actions</th>
@@ -117,7 +117,6 @@ const SealPricingManager = () => {
             {sealPricing.map((item) => (
               <tr key={item.id} className="border-b hover:bg-gray-50">
                 <td className="py-2 px-3">{item.seal_type}</td>
-                <td className="py-2 px-3">{item.finish}</td>
                 <td className="py-2 px-3">{item.quantity}</td>
                 <td className="py-2 px-3">{item.unit_price}</td>
                 <td className="py-2 px-3 text-right">
@@ -138,7 +137,7 @@ const SealPricingManager = () => {
             ))}
             {sealPricing.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-4 text-gray-400">
+                <td colSpan={4} className="text-center py-4 text-gray-400">
                   No seal pricing entries defined yet.
                 </td>
               </tr>
@@ -147,29 +146,23 @@ const SealPricingManager = () => {
         </table>
       </div>
       <div className="flex flex-wrap gap-3 mb-4">
-        <input
-          name="seal_type"
-          type="text"
+        <select
+          name="seal_type_id"
           className="border rounded px-3 py-1 flex-1 min-w-[130px] text-sm"
-          placeholder="Seal type"
-          value={form.seal_type}
+          value={form.seal_type_id}
           onChange={handleInputChange}
           disabled={loading}
-        />
-        <input
-          name="finish"
-          type="text"
-          className="border rounded px-3 py-1 flex-1 min-w-[110px] text-sm"
-          placeholder="Finish"
-          value={form.finish}
-          onChange={handleInputChange}
-          disabled={loading}
-        />
+        >
+          <option value="">Select seal type</option>
+          {sealTypes.map((type) => (
+            <option key={type.id} value={type.id}>{type.name}</option>
+          ))}
+        </select>
         <input
           name="quantity"
           type="number"
           className="border rounded px-3 py-1 w-24 text-sm"
-          placeholder="Qty"
+          placeholder="Quantity"
           value={form.quantity}
           min={1}
           onChange={handleInputChange}
@@ -201,7 +194,7 @@ const SealPricingManager = () => {
           <button
             className="text-sm px-5 py-2 rounded bg-gray-200 text-gray-700"
             onClick={() => {
-              setForm({ seal_type: "", finish: "", quantity: 1, unit_price: "" });
+              setForm({ seal_type_id: "", quantity: 1, unit_price: "" });
               setEditingId(null);
               setFeedback("");
             }}

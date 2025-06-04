@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://shower-quote-backend.onrender.com/api";
+import api from "./api";
 
 const ModelComponentEditor = ({ model, refreshModels }) => {
   // State for component lists
@@ -22,23 +20,23 @@ const ModelComponentEditor = ({ model, refreshModels }) => {
   // Fetch all options and current model components
   useEffect(() => {
     if (!model?.id) return;
-    axios.get(`${API}/model-glass-components/${model.id}`).then(res => setGlass(res.data));
-    axios.get(`${API}/model-hardware-components/${model.id}`).then(res => setHardware(res.data));
-    axios.get(`${API}/model-seal-components/${model.id}`).then(res => setSeals(res.data));
+    api.get(`/model-glass-components/${model.id}`).then(res => setGlass(res.data));
+    api.get(`/model-hardware-components/${model.id}`).then(res => setHardware(res.data));
+    api.get(`/model-seal-components/${model.id}`).then(res => setSeals(res.data));
   }, [model, refreshModels]);
 
   useEffect(() => {
-    axios.get(`${API}/glass-types`).then(r => setAllGlassTypes(r.data));
-    axios.get(`${API}/glass-thickness`).then(r => setAllThicknesses(r.data));
-    axios.get(`${API}/hardware-types`).then(r => setAllHardwareTypes(r.data));
-    axios.get(`${API}/finishes`).then(r => setAllFinishes(r.data));
-    axios.get(`${API}/seal-types`).then(r => setAllSealTypes(r.data));
+    api.get("/glass-types").then(r => setAllGlassTypes(r.data));
+    api.get("/glass-thickness").then(r => setAllThicknesses(r.data));
+    api.get("/hardware-types").then(r => setAllHardwareTypes(r.data));
+    api.get("/finishes").then(r => setAllFinishes(r.data));
+    api.get("/seal-types").then(r => setAllSealTypes(r.data));
   }, []);
 
   // Handlers for adding components
   const addGlass = async () => {
     if (!glassForm.glass_type_id || !glassForm.thickness_id) return;
-    await axios.post(`${API}/model-glass-components`, {
+    await api.post(`/model-glass-components`, {
       ...glassForm,
       model_id: model.id,
       quantity: Number(glassForm.quantity) || 1,
@@ -49,7 +47,7 @@ const ModelComponentEditor = ({ model, refreshModels }) => {
 
   const addHardware = async () => {
     if (!hardwareForm.hardware_type_id || !hardwareForm.finish_id) return;
-    await axios.post(`${API}/model-hardware-components`, {
+    await api.post(`/model-hardware-components`, {
       ...hardwareForm,
       model_id: model.id,
       quantity: Number(hardwareForm.quantity) || 1,
@@ -60,7 +58,7 @@ const ModelComponentEditor = ({ model, refreshModels }) => {
 
   const addSeal = async () => {
     if (!sealForm.seal_type_id) return;
-    await axios.post(`${API}/model-seal-components`, {
+    await api.post(`/model-seal-components`, {
       ...sealForm,
       model_id: model.id,
       quantity: Number(sealForm.quantity) || 1,
@@ -71,15 +69,15 @@ const ModelComponentEditor = ({ model, refreshModels }) => {
 
   // Handlers for deleting components
   const delGlass = async (id) => {
-    await axios.delete(`${API}/model-glass-components/${id}`);
+    await api.delete(`/model-glass-components/${id}`);
     refreshModels();
   };
   const delHardware = async (id) => {
-    await axios.delete(`${API}/model-hardware-components/${id}`);
+    await api.delete(`/model-hardware-components/${id}`);
     refreshModels();
   };
   const delSeal = async (id) => {
-    await axios.delete(`${API}/model-seal-components/${id}`);
+    await api.delete(`/model-seal-components/${id}`);
     refreshModels();
   };
 

@@ -14,7 +14,7 @@ const GlassThicknessManager = () => {
       const res = await api.get("/glass-thickness");
       setThicknesses(res.data);
     } catch (err) {
-      setFeedback("Failed to fetch thicknesses.");
+      setFeedback("Failed to fetch thickness.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ const GlassThicknessManager = () => {
 
   return (
     <div className="bg-white shadow rounded p-6 max-w-xl mx-auto">
-      <h2 className="font-bold text-lg mb-4">Glass Thicknesses</h2>
+      <h2 className="font-bold text-lg mb-4">Glass Thickness</h2>
       {feedback && (
         <div
           className={`mb-4 px-4 py-2 rounded text-sm ${

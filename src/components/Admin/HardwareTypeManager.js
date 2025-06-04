@@ -28,7 +28,7 @@ const HardwareTypeManager = () => {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      setFeedback("Name required.");
+      setFeedback("Name is required.");
       return;
     }
     setLoading(true);

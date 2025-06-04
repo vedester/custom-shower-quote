@@ -1,9 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import api from './Admin/api'; // <--- Use your centralized API connector
+import api from './Admin/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
-// Set a default hardware type string for matching in hardware pricing.
 const DEFAULT_HARDWARE_TYPE = "Hardware Type 1";
+
+// Helper: get model image URL from models and selected model id
+const getModelImageUrl = (models = [], showerTypes = [], selectedModelId, selectedShowerTypeId) => {
+  let model = null;
+  if (selectedShowerTypeId) {
+    const filtered = models.filter((m) => String(m.shower_type_id) === String(selectedShowerTypeId));
+    model = filtered.find((m) => String(m.id) === String(selectedModelId));
+  }
+  if (!model) {
+    model = models.find((m) => String(m.id) === String(selectedModelId));
+  }
+  if (!model) return null;
+  if (!model.image_path) return null;
+  return model.image_path.startsWith('http')
+    ? model.image_path
+    : `/images/models/${model.image_path}`;
+};
 
 const QuoteCalculator = ({
   customerInfo,
@@ -14,7 +32,8 @@ const QuoteCalculator = ({
   addOns,
   models,
   showerTypes,
-  companySettings
+  companySettings,
+  sealTypes,
 }) => {
   const _glassTypes = glassTypes || [];
   const _glassThicknesses = glassThicknesses || [];
@@ -22,6 +41,7 @@ const QuoteCalculator = ({
   const _addOns = addOns || [];
   const _models = models || [];
   const _showerTypes = showerTypes || [];
+  const _sealTypes = sealTypes || [];
   const _formData = formData || {};
 
   const { t } = useTranslation();
@@ -30,42 +50,54 @@ const QuoteCalculator = ({
   const [glassPricing, setGlassPricing] = useState([]);
   const [hardwarePricing, setHardwarePricing] = useState([]);
   const [addonList, setAddonList] = useState([]);
+  const [sealPricing, setSealPricing] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Quote calculation states
   const [quote, setQuote] = useState({
     glassPrice: 0,
     hardwarePrice: 0,
+    sealsPrice: 0,
     addonsPrice: 0,
     subtotal: 0,
-    tax: 0,
+    vat: 0,
+    profit: 0,
     total: 0,
-    area: 0
+    area: 0,
   });
 
   // Debug info for matching process
   const [debugInfo, setDebugInfo] = useState({
     glassMatch: null,
-    hardwareMatch: null
+    hardwareMatch: null,
+    sealsMatch: [],
   });
+
+  // Image loading for PDF
+  const [modelImageLoaded, setModelImageLoaded] = useState(false);
+
+  const pdfRef = useRef();
 
   // Fetch pricing data from backend
   useEffect(() => {
     const fetchPricingData = async () => {
       try {
         setLoading(true);
-        const [glassRes, hardwareRes, addonRes] = await Promise.all([
+        const [glassRes, hardwareRes, addonRes, sealRes] = await Promise.all([
           api.get('/glass-pricing'),
           api.get('/hardware-pricing'),
-          api.get('/addons')
+          api.get('/addons'),
+          api.get('/seal-pricing'),
         ]);
         setGlassPricing(Array.isArray(glassRes.data) ? glassRes.data : []);
         setHardwarePricing(Array.isArray(hardwareRes.data) ? hardwareRes.data : []);
         setAddonList(Array.isArray(addonRes.data) ? addonRes.data : []);
+        setSealPricing(Array.isArray(sealRes.data) ? sealRes.data : []);
       } catch (error) {
         setGlassPricing([]);
         setHardwarePricing([]);
         setAddonList([]);
+        setSealPricing([]);
       } finally {
         setLoading(false);
       }
@@ -81,70 +113,116 @@ const QuoteCalculator = ({
     const width = parseFloat(_formData.width) || 0;
     const length = parseFloat(_formData.length) || 0;
     let area = 0;
-    const selectedShowerType = _showerTypes.find(st => String(st.id) === String(_formData.showerType));
+    const selectedShowerType = _showerTypes.find(
+      (st) => String(st.id) === String(_formData.showerType)
+    );
     if (selectedShowerType?.name?.toLowerCase().includes('corner')) {
-      area = (height * width) + (height * length);
+      area = height * width + height * length;
     } else {
       area = height * width;
     }
 
     // Selected glass type and thickness (by id)
-    const selectedGlassTypeName = _glassTypes.find(gt => String(gt.id) === String(_formData.glassType))?.name;
-    const selectedThicknessMM = _glassThicknesses.find(th => String(th.id) === String(_formData.glassThickness))?.thickness_mm;
+    const selectedGlassTypeName = _glassTypes.find(
+      (gt) => String(gt.id) === String(_formData.glassType)
+    )?.name;
+    const selectedThicknessMM = _glassThicknesses.find(
+      (th) => String(th.id) === String(_formData.glassThickness)
+    )?.thickness_mm;
 
     // Match glass price
-    let glassPrice = 0, glassMatch = null;
+    let glassPrice = 0,
+      glassMatch = null;
     if (selectedGlassTypeName && selectedThicknessMM) {
-      const glassPriceObj = glassPricing.find(gp =>
-        gp.glass_type === selectedGlassTypeName &&
-        Number(gp.thickness_mm) === Number(selectedThicknessMM)
+      const glassPriceObj = glassPricing.find(
+        (gp) =>
+          gp.glass_type === selectedGlassTypeName &&
+          Number(gp.thickness_mm) === Number(selectedThicknessMM)
       );
       if (glassPriceObj) {
         glassPrice = (parseFloat(glassPriceObj.price_per_m2) || 0) * area;
         glassMatch = {
           found: true,
           data: glassPriceObj,
-          calculation: `₪{glassPriceObj.price_per_m2} × ₪{area.toFixed(2)}m² = ₪{glassPrice.toFixed(2)}`
+          calculation: `${glassPriceObj.price_per_m2} × ${area.toFixed(2)}m² = ₪${glassPrice.toFixed(2)}`,
         };
       } else {
         glassMatch = {
           found: false,
-          searchedFor: `₪{selectedGlassTypeName} ₪{selectedThicknessMM}mm`
+          searchedFor: `${selectedGlassTypeName} ${selectedThicknessMM}mm`,
         };
       }
     }
 
     // Get selected finish (by id)
-    const selectedFinishName = _finishes.find(f => String(f.id) === String(_formData.hardwareFinish))?.name;
+    const selectedFinishName = _finishes.find(
+      (f) => String(f.id) === String(_formData.hardwareFinish)
+    )?.name;
 
     // Match hardware price by DEFAULT_HARDWARE_TYPE and finish
-    let hardwarePrice = 0, hardwareMatch = null;
+    let hardwarePrice = 0,
+      hardwareMatch = null;
     if (selectedFinishName) {
-      const hardwarePriceObj = hardwarePricing.find(hp =>
-        hp.hardware_type === DEFAULT_HARDWARE_TYPE &&
-        hp.finish === selectedFinishName
+      const hardwarePriceObj = hardwarePricing.find(
+        (hp) =>
+          hp.hardware_type === DEFAULT_HARDWARE_TYPE && hp.finish === selectedFinishName
       );
       if (hardwarePriceObj) {
-        hardwarePrice = parseFloat(hardwarePriceObj.unit_price || hardwarePriceObj.price || 0);
+        const quantity = Number(_formData.hardwareQuantity) || hardwarePriceObj.quantity || 1;
+        hardwarePrice =
+          (parseFloat(hardwarePriceObj.unit_price || hardwarePriceObj.price || 0)) *
+          quantity;
         hardwareMatch = {
           found: true,
           data: hardwarePriceObj,
-          price: hardwarePrice
+          price: hardwarePrice,
+          quantity,
         };
       } else {
         hardwareMatch = {
           found: false,
-          searchedFor: `₪{DEFAULT_HARDWARE_TYPE} with ₪{selectedFinishName} finish`
+          searchedFor: `${DEFAULT_HARDWARE_TYPE} with ${selectedFinishName} finish`,
         };
       }
     }
+
+    // --- SEALS LOGIC (support multiple seals, reflect on selected list) ---
+    let sealsPrice = 0;
+    let sealsMatch = [];
+    const sealSelections =
+      _formData.sealSelections ||
+      (_formData.sealType && _formData.sealQuantity
+        ? { [_formData.sealType]: Number(_formData.sealQuantity) }
+        : {});
+    Object.entries(sealSelections).forEach(([sealTypeId, quantity]) => {
+      if (quantity > 0) {
+        const sealObj = sealPricing.find((s) => String(s.seal_type_id) === String(sealTypeId));
+        if (sealObj) {
+          const price = (parseFloat(sealObj.unit_price) || 0) * quantity;
+          sealsPrice += price;
+          sealsMatch.push({
+            found: true,
+            sealType: _sealTypes.find((st) => String(st.id) === String(sealTypeId))?.name || sealTypeId,
+            unit_price: sealObj.unit_price,
+            quantity,
+            price,
+          });
+        } else {
+          sealsMatch.push({
+            found: false,
+            sealType: _sealTypes.find((st) => String(st.id) === String(sealTypeId))?.name || sealTypeId,
+            quantity,
+          });
+        }
+      }
+    });
 
     // Add-ons price: sum (quantity × price) for each add-on selected
     let addonsPrice = 0;
     if (_formData.addOnQuantities && Object.keys(_formData.addOnQuantities).length > 0) {
       Object.entries(_formData.addOnQuantities).forEach(([addonName, quantity]) => {
         if (quantity > 0) {
-          const addonObj = addonList.find(a => a.name === addonName);
+          const addonObj = addonList.find((a) => a.name === addonName);
           if (addonObj) {
             addonsPrice += (parseFloat(addonObj.price) || 0) * quantity;
           }
@@ -152,42 +230,51 @@ const QuoteCalculator = ({
       });
     }
 
-    const subtotal = glassPrice + hardwarePrice + addonsPrice;
-    const tax = subtotal * 0.30; // 30% VAT
-    const total = subtotal + tax;
+    // Pricing formula
+    const subtotal = glassPrice + hardwarePrice + sealsPrice + addonsPrice;
+    const vat = subtotal * 0.18;
+    const profitMarginPercent = Number(companySettings?.profitMarginPercent) || 20; // Default 20%
+    const profit = (subtotal + vat) * (profitMarginPercent / 100);
+    const total = subtotal + vat + profit;
 
     setQuote({
       glassPrice,
       hardwarePrice,
+      sealsPrice,
       addonsPrice,
       subtotal,
-      tax,
+      vat,
+      profit,
       total,
-      area
+      area,
     });
 
     setDebugInfo({
       glassMatch,
-      hardwareMatch
+      hardwareMatch,
+      sealsMatch,
     });
   }, [
     _formData,
     glassPricing,
     hardwarePricing,
     addonList,
+    sealPricing,
     _glassTypes,
     _glassThicknesses,
     _finishes,
     _addOns,
     _models,
     _showerTypes,
-    loading
+    _sealTypes,
+    loading,
+    companySettings,
   ]);
 
   // Get selected option names for display
   const getSelectedOptionName = (options, selectedId) => {
     if (!options) return '--';
-    const option = options.find(opt => String(opt.id) === String(selectedId));
+    const option = options.find((opt) => String(opt.id) === String(selectedId));
     return option?.name || '--';
   };
 
@@ -196,135 +283,441 @@ const QuoteCalculator = ({
       style: 'currency',
       currency: 'ILS',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(price);
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+  // --- SEAL SELECTION LIST DISPLAY ---
+  const selectedSealsList = Object.entries(
+    _formData.sealSelections ||
+      (_formData.sealType && _formData.sealQuantity
+        ? { [_formData.sealType]: Number(_formData.sealQuantity) }
+        : {})
+  ).filter(([_, q]) => q > 0);
 
+  // --- Model Preview image, matched to ShowerConfigurator ---
+  const modelImageUrl = getModelImageUrl(_models, _showerTypes, _formData.model, _formData.showerType);
+  const selectedModel = _models.find((m) => String(m.id) === String(_formData.model));
+
+  // Preload model image for PDF export
+  useEffect(() => {
+    if (!modelImageUrl) {
+      setModelImageLoaded(true);
+      return;
+    }
+    setModelImageLoaded(false);
+    const img = new window.Image();
+    img.crossOrigin = "anonymous";
+    img.src = modelImageUrl;
+    img.onload = () => setModelImageLoaded(true);
+    img.onerror = () => setModelImageLoaded(false);
+  }, [modelImageUrl]);
+
+  // PDF Download Handler
+  const handleDownloadPDF = async () => {
+    // Only allow PDF if image is loaded (prevents blank image in PDF)
+    if (modelImageUrl && !modelImageLoaded) {
+      alert("Please wait, the model image is still loading...");
+      return;
+    }
+    const pdfInput = document.getElementById('full-pdf-content');
+    if (!pdfInput) return;
+    const downloadBtn = document.getElementById('download-pdf-btn');
+    if (downloadBtn) downloadBtn.style.display = 'none';
+
+    await html2canvas(pdfInput, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#fff",
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pageWidth - 20;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+      pdf.save('quote-summary.pdf');
+    });
+
+    setTimeout(() => {
+      if (downloadBtn) downloadBtn.style.display = '';
+    }, 500);
+  };
+
+  // --- CUSTOMER FINAL OUTPUT: Only Display Final Price Card (no model image preview) ---
   return (
-    <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg p-4 border border-blue-100">
-      <h2 className="text-lg font-bold text-blue-700 mb-4 flex items-center">
-        <span className="mr-2">💰</span>
-        {t('Quote Summary') || 'Quote Summary'}
-      </h2>
-
-      {/* Customer Information */}
-      {customerInfo?.name && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="font-semibold text-blue-800 mb-2">{t('Customer Information') || 'Customer Information'}</h3>
-          <div className="text-sm space-y-1">
-            <p><span className="font-medium">{t('Name')}:</span> {customerInfo.name}</p>
-            <p><span className="font-medium">{t('City')}:</span> {customerInfo.city}</p>
-            <p><span className="font-medium">{t('Phone')}:</span> {customerInfo.phone}</p>
-          </div>
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "40vh",
+      width: "100%"
+    }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          margin: "0 auto",
+          background: "#dbeafe",
+          borderRadius: "1.5rem",
+          boxShadow: "0 10px 25px rgba(30, 64, 175, 0.07), 0 2px 4px rgba(30, 64, 175, 0.09)",
+          padding: 32,
+          border: "1px solid #bfdbfe"
+        }}
+        ref={pdfRef}
+      >
+        <h2 style={{
+              fontSize: 28,
+              fontWeight: 800,
+              textAlign: "center",
+              color: "#1e3a8a",
+              marginBottom: 16
+            }}>
+          {t('Final Quote') || 'Final Quote'}
+        </h2>
+        {/* NO IMAGE PREVIEW HERE */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}>
+          <span style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: "#2563eb",
+            marginBottom: 8
+          }}>
+            {t('Total Price')}:
+          </span>
+          <span style={{
+            fontSize: 40,
+            fontWeight: 800,
+            color: "#1e3a8a",
+            letterSpacing: "0.09em",
+            marginBottom: 16
+          }}>
+            {formatPrice(quote.total)}
+          </span>
         </div>
-      )}
+        <div style={{
+          textAlign: "center",
+          color: "#374151",
+          marginBottom: 24,
+          marginTop: 8
+        }}>
+          {t('Includes all materials, VAT (18%), and profit margin')}
+        </div>
+        <button
+          id="download-pdf-btn"
+          type="button"
+          onClick={handleDownloadPDF}
+          disabled={!!modelImageUrl && !modelImageLoaded}
+          style={{
+            width: "100%",
+            padding: "12px 0",
+            borderRadius: "0.75rem",
+            background: modelImageUrl && !modelImageLoaded ? "#a5b4fc" : "#2563eb",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: 20,
+            marginTop: 8,
+            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.19)",
+            cursor: modelImageUrl && !modelImageLoaded ? "not-allowed" : "pointer"
+          }}
+        >
+          {modelImageUrl && !modelImageLoaded
+            ? t('Loading image...')
+            : (t('Download Full Quote PDF') || 'Download Full Quote PDF')}
+        </button>
+      </div>
 
-      {/* Configuration Summary */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <h3 className="font-semibold text-gray-800 mb-2">{t('Configuration') || 'Configuration'}</h3>
-        <div className="text-sm space-y-1">
-          <p><span className="font-medium">{t('Shower Type')}:</span> {getSelectedOptionName(_showerTypes, _formData.showerType)}</p>
-          <p><span className="font-medium">{t('Model')}:</span> {getSelectedOptionName(_models, _formData.model)}</p>
-          <p>
-            <span className="font-medium">{t('Glass Type')}:</span>{" "}
-            {getSelectedOptionName(_glassTypes, _formData.glassType)}{_formData.glassThickness ? ` (₪{_glassThicknesses.find(th => String(th.id) === String(_formData.glassThickness))?.thickness_mm}mm)` : ''}
-          </p>
-          <p><span className="font-medium">{t('Hardware Finish')}:</span> {getSelectedOptionName(_finishes, _formData.hardwareFinish)}</p>
-          <p><span className="font-medium">{t('Dimensions')}:</span> {_formData.height}m × {_formData.width}m {_formData.length ? `× ₪{_formData.length}m` : ''}</p>
-          {quote.area > 0 && (
-            <p><span className="font-medium">{t('Glass Area')}:</span> {quote.area.toFixed(2)} m²</p>
+      {/* --- Hidden PDF Content (for export only) --- */}
+      <div
+        style={{ position: 'absolute', left: '-9999px', top: '0', width: '800px', zIndex: -1 }}
+        aria-hidden="true"
+      >
+        <div style={{
+          background: "#fff",
+          boxShadow: "0 10px 25px rgba(30, 64, 175, 0.07), 0 2px 4px rgba(30, 64, 175, 0.09)",
+          borderRadius: "1.5rem",
+          padding: 32
+        }} id="full-pdf-content">
+          <h2 style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: "#1e3a8a",
+            marginBottom: 16,
+            textAlign: "center"
+          }}>
+            {t('Quote Summary')}
+          </h2>
+          {modelImageUrl && modelImageLoaded && (
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+              <img
+                src={modelImageUrl}
+                alt={selectedModel?.name || 'Model'}
+                style={{
+                  height: 176,
+                  width: "auto",
+                  objectFit: "contain",
+                  borderRadius: "1rem",
+                  border: "1px solid #d1d5db",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+                }}
+                crossOrigin="anonymous"
+              />
+            </div>
           )}
+          {/* Customer Info */}
+          {customerInfo?.name && (
+            <div style={{
+              marginBottom: 16,
+              padding: 12,
+              background: "#e0e7ff",
+              borderRadius: "0.75rem",
+              border: "1px solid #bfdbfe"
+            }}>
+              <h3 style={{
+                fontWeight: 600,
+                color: "#2563eb",
+                marginBottom: 8
+              }}>
+                {t('Customer Information') || 'Customer Information'}
+              </h3>
+              <div style={{ fontSize: 14, lineHeight: 1.6 }}>
+                <p><span style={{ fontWeight: 500 }}>{t('Name')}:</span> {customerInfo.name}</p>
+                <p><span style={{ fontWeight: 500 }}>{t('City')}:</span> {customerInfo.city}</p>
+                <p><span style={{ fontWeight: 500 }}>{t('Phone')}:</span> {customerInfo.phone}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Configuration Summary */}
+          <div style={{
+            marginBottom: 16,
+            padding: 12,
+            background: "#f3f4f6",
+            borderRadius: "0.75rem"
+          }}>
+            <h3 style={{
+              fontWeight: 600,
+              color: "#374151",
+              marginBottom: 8
+            }}>{t('Configuration') || 'Configuration'}</h3>
+            <div style={{ fontSize: 14, lineHeight: 1.6 }}>
+              <p>
+                <span style={{ fontWeight: 500 }}>{t('Shower Type')}:</span>{' '}
+                {getSelectedOptionName(_showerTypes, _formData.showerType)}
+              </p>
+              <p>
+                <span style={{ fontWeight: 500 }}>{t('Model')}:</span>{' '}
+                {getSelectedOptionName(_models, _formData.model)}
+              </p>
+              <p>
+                <span style={{ fontWeight: 500 }}>{t('Glass Type')}:</span>{' '}
+                {getSelectedOptionName(_glassTypes, _formData.glassType)}
+                {_formData.glassThickness
+                  ? ` (${_glassThicknesses.find((th) => String(th.id) === String(_formData.glassThickness))?.thickness_mm}mm)`
+                  : ''}
+              </p>
+              <p>
+                <span style={{ fontWeight: 500 }}>{t('Hardware Finish')}:</span>{' '}
+                {getSelectedOptionName(_finishes, _formData.hardwareFinish)}
+              </p>
+              <p>
+                <span style={{ fontWeight: 500 }}>{t('Dimensions')}:</span>{' '}
+                {_formData.height}m × {_formData.width}m {_formData.length ? `× ${_formData.length}m` : ''}
+              </p>
+              {quote.area > 0 && (
+                <p>
+                  <span style={{ fontWeight: 500 }}>{t('Glass Area')}:</span> {quote.area.toFixed(2)} m²
+                </p>
+              )}
+              {/* --- Seals List, Premium Format --- */}
+              {selectedSealsList.length > 0 && (
+                <div style={{ marginTop: 8 }}>
+                  <span style={{ fontWeight: 500 }}>{t('Seals')}:</span>
+                  <table style={{ marginLeft: 8, marginTop: 6, fontSize: 13, borderCollapse: 'collapse', width: '90%' }}>
+                    <thead>
+                      <tr style={{ color: "#6b7280" }}>
+                        <th align="left">{t('Type') || 'Type'}</th>
+                        <th align="right">{t('Qty') || 'Qty'}</th>
+                        <th align="right">{t('Unit Price') || 'Unit Price'}</th>
+                        <th align="right">{t('Total') || 'Total'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {debugInfo.sealsMatch && debugInfo.sealsMatch.length > 0 ? (
+                        debugInfo.sealsMatch.map((sm, idx) =>
+                          sm.found ? (
+                            <tr key={idx}>
+                              <td>{sm.sealType}</td>
+                              <td align="right">{sm.quantity}</td>
+                              <td align="right">{formatPrice(sm.unit_price)}</td>
+                              <td align="right">{formatPrice(sm.price)}</td>
+                            </tr>
+                          ) : (
+                            <tr key={idx} style={{ color: "#dc2626" }}>
+                              <td colSpan={4}>
+                                {t('Not found')}: {sm.sealType} (x{sm.quantity})
+                              </td>
+                            </tr>
+                          )
+                        )
+                      ) : (
+                        <tr>
+                          <td colSpan={4}>{t('No seals selected')}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Price Matches */}
+          {(debugInfo.glassMatch && debugInfo.glassMatch.found) ||
+          (debugInfo.hardwareMatch && debugInfo.hardwareMatch.found) ||
+          debugInfo.sealsMatch.some((sm) => sm.found) ? (
+            <div style={{
+              marginBottom: 16,
+              padding: 12,
+              background: "#dcfce7",
+              border: "1px solid #bbf7d0",
+              borderRadius: "0.75rem"
+            }}>
+              <h4 style={{
+                fontWeight: 600,
+                color: "#16a34a",
+                marginBottom: 8
+              }}>✅ {t('Price Matches Found')}</h4>
+              <div style={{ fontSize: 14, lineHeight: 1.6 }}>
+                {debugInfo.glassMatch && debugInfo.glassMatch.found && (
+                  <p style={{ color: "#15803d" }}>
+                    {t('Glass')}: {debugInfo.glassMatch.calculation}
+                  </p>
+                )}
+                {debugInfo.hardwareMatch && debugInfo.hardwareMatch.found && (
+                  <p style={{ color: "#15803d" }}>
+                    {t('Hardware')}: {formatPrice(debugInfo.hardwareMatch.price)} (qty: {debugInfo.hardwareMatch.quantity})
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Price Breakdown */}
+          <div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <span style={{ fontSize: 14 }}>{t('Glass Price') || 'Glass Price'}</span>
+              <span style={{
+                fontWeight: 500,
+                color: quote.glassPrice > 0 ? "#059669" : "#dc2626"
+              }}>
+                {formatPrice(quote.glassPrice)}
+              </span>
+            </div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <span style={{ fontSize: 14 }}>{t('Hardware Price') || 'Hardware Price'}</span>
+              <span style={{
+                fontWeight: 500,
+                color: quote.hardwarePrice > 0 ? "#059669" : "#dc2626"
+              }}>
+                {formatPrice(quote.hardwarePrice)}
+              </span>
+            </div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #e5e7eb"
+            }}>
+              <span style={{ fontSize: 14 }}>{t('Seals Price') || 'Seals Price'}</span>
+              <span style={{
+                fontWeight: 500,
+                color: quote.sealsPrice > 0 ? "#059669" : "#dc2626"
+              }}>
+                {formatPrice(quote.sealsPrice)}
+              </span>
+            </div>
+            {quote.addonsPrice > 0 && (
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "8px 0",
+                borderBottom: "1px solid #e5e7eb"
+              }}>
+                <span style={{ fontSize: 14 }}>{t('Add-ons Price') || 'Add-ons Price'}</span>
+                <span style={{ fontWeight: 500, color: "#2563eb" }}>{formatPrice(quote.addonsPrice)}</span>
+              </div>
+            )}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #d1d5db"
+            }}>
+              <span style={{ fontWeight: 600 }}>{t('Subtotal') || 'Subtotal'}</span>
+              <span style={{ fontWeight: 600, color: "#374151" }}>{formatPrice(quote.subtotal)}</span>
+            </div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #d1d5db"
+            }}>
+              <span style={{ fontSize: 14, color: "#6b7280" }}>{t('VAT (18%)') || 'VAT (18%)'}</span>
+              <span style={{ color: "#6b7280" }}>{formatPrice(quote.vat)}</span>
+            </div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "8px 0",
+              borderBottom: "1px solid #d1d5db"
+            }}>
+              <span style={{ fontSize: 14, color: "#6b7280" }}>
+                {t('Profit') || 'Profit'} ({companySettings?.profitMarginPercent || 20}%)
+              </span>
+              <span style={{ color: "#6b7280" }}>{formatPrice(quote.profit)}</span>
+            </div>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "12px 0",
+              background: "#bae6fd",
+              borderRadius: "0.5rem",
+              paddingLeft: 12,
+              paddingRight: 12,
+              border: "2px solid #7dd3fc",
+              marginTop: 8
+            }}>
+              <span style={{ fontWeight: 700, color: "#1e40af", fontSize: 18 }}>{t('Total') || 'Total'}</span>
+              <span style={{ fontWeight: 700, color: "#1e40af", fontSize: 22 }}>{formatPrice(quote.total)}</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Debug Information */}
-      {(debugInfo.glassMatch && !debugInfo.glassMatch.found) || (debugInfo.hardwareMatch && !debugInfo.hardwareMatch.found) ? (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h4 className="font-semibold text-yellow-800 mb-2">🔍 Price Matching Status</h4>
-          <div className="text-sm space-y-1">
-            {debugInfo.glassMatch && !debugInfo.glassMatch.found && (
-              <p className="text-red-600">Glass Price Not Found: {debugInfo.glassMatch.searchedFor}</p>
-            )}
-            {debugInfo.hardwareMatch && !debugInfo.hardwareMatch.found && (
-              <p className="text-red-600">Hardware Price Not Found: {debugInfo.hardwareMatch.searchedFor}</p>
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Success Information */}
-      {((debugInfo.glassMatch && debugInfo.glassMatch.found) || (debugInfo.hardwareMatch && debugInfo.hardwareMatch.found)) && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">✅ Price Matches Found</h4>
-          <div className="text-sm space-y-1">
-            {debugInfo.glassMatch && debugInfo.glassMatch.found && (
-              <p className="text-green-700">Glass: {debugInfo.glassMatch.calculation}</p>
-            )}
-            {debugInfo.hardwareMatch && debugInfo.hardwareMatch.found && (
-              <p className="text-green-700">Hardware: {formatPrice(debugInfo.hardwareMatch.price)}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Price Breakdown */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-          <span className="text-sm">{t('Glass Price') || 'Glass Price'}</span>
-          <span className={`font-medium ₪{quote.glassPrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {formatPrice(quote.glassPrice)}
-          </span>
-        </div>
-        <div className="flex justify-between items-center py-2 border-b border-gray-200">
-          <span className="text-sm">{t('Hardware Price') || 'Hardware Price'}</span>
-          <span className={`font-medium ₪{quote.hardwarePrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {formatPrice(quote.hardwarePrice)}
-          </span>
-        </div>
-        {quote.addonsPrice > 0 && (
-          <div className="flex justify-between items-center py-2 border-b border-gray-200">
-            <span className="text-sm">{t('Add-ons Price') || 'Add-ons Price'}</span>
-            <span className="font-medium text-blue-600">{formatPrice(quote.addonsPrice)}</span>
-          </div>
-        )}
-        <div className="flex justify-between items-center py-2 border-b border-gray-300">
-          <span className="font-medium">{t('Subtotal') || 'Subtotal'}</span>
-          <span className="font-semibold text-gray-800">{formatPrice(quote.subtotal)}</span>
-        </div>
-        <div className="flex justify-between items-center py-2 border-b border-gray-300">
-          <span className="text-sm text-gray-600">{t('VAT (30%)') || 'VAT (30%)'}</span>
-          <span className="text-gray-600">{formatPrice(quote.tax)}</span>
-        </div>
-        <div className="flex justify-between items-center py-3 bg-blue-100 rounded-lg px-3 border-2 border-blue-300">
-          <span className="font-bold text-blue-800 text-lg">{t('Total') || 'Total'}</span>
-          <span className="font-bold text-blue-800 text-xl">{formatPrice(quote.total)}</span>
-        </div>
-      </div>
-
-      {/* Status Messages */}
-      {quote.total === 0 && !loading && (
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-yellow-800 text-sm">
-            {debugInfo.glassMatch?.found === false || debugInfo.hardwareMatch?.found === false
-              ? t('Some prices could not be found. Please check your pricing data.') || 'Some prices could not be found. Please check your pricing data.'
-              : t('Please complete your selection to see pricing') || 'Please complete your selection to see pricing'
-            }
-          </p>
-        </div>
-      )}
     </div>
   );
 };

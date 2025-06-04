@@ -4,8 +4,9 @@ import api from "./api";
 
 import ShowerTypeManager from "./ShowerTypeManager";
 import ModelManager from "./ModelManager";
+import ModelComponentEditor from "./ModelComponentEditor";
 
-// Real Glass management components
+// Glass management components
 import GlassTypeManager from "./GlassTypeManager";
 import GlassPricingManager from "./GlassPricingManager";
 import GlassThicknessManager from "./GlassThicknessManager";
@@ -15,8 +16,7 @@ import FinishManager from "./FinishManager";
 import HardwareTypeManager from "./HardwareTypeManager";
 import HardwarePricingManager from "./HardwarePricingManager";
 import SealPricingManager from "./SealPricingManager";
-// Gasket pricing management
-import GasketPricingManager from "./GasketPricingManager";
+import SealTypeManager from "./SealTypeManager";
 
 // Add-ons management component
 import AddonManager from "./AddonManager";
@@ -32,7 +32,6 @@ import FindAddonPrice from "./FindAddonPrice";
 
 // Placeholder components
 const Dashboard = () => <div><h2>Dashboard</h2><p>Welcome to the Admin Panel!</p></div>;
-const SealPricingManagement = () => <div><h2>Seal Pricing Management</h2></div>;
 const GalleryManagement = () => <div><h2>Gallery Management</h2></div>;
 const AdminManagement = () => <div><h2>Admin Management</h2></div>;
 
@@ -43,6 +42,8 @@ const AdminPanel = () => {
   const [glassPricing, setGlassPricing] = useState([]);
   const [hardwarePricing, setHardwarePricing] = useState([]);
   const [addonPricing, setAddonPricing] = useState([]);
+  const [selectedModel, setSelectedModel] = useState(null); // For ModelComponentEditor modal
+  const [refreshModels, setRefreshModels] = useState(0);
   const navigate = useNavigate();
 
   const navItems = [
@@ -57,9 +58,8 @@ const AdminPanel = () => {
     { key: "finishes", label: "Hardware Finishes" },
     { key: "hardwareTypes", label: "Hardware Types" },
     { key: "hardwarePricing", label: "Hardware Pricing" },
-    // Gasket management
-    { key: "gasketPricing", label: "Gasket Pricing" },
-    // Other pricing sections
+    // Seal management
+    { key: "sealTypes", label: "Seal Types" },
     { key: "sealPricing", label: "Seal Pricing" },
     // Others
     { key: "addons", label: "Add-ons" },
@@ -126,6 +126,47 @@ const AdminPanel = () => {
     navigate("/login", { replace: true });
   };
 
+  // Render ModelManager with ability to open ModelComponentEditor modal
+  const renderModelsWithEditor = () => (
+    <div>
+      <ModelManager
+        onEditComponents={model => setSelectedModel(model)}
+        refreshModelsFlag={refreshModels}
+        onModelChange={() => setRefreshModels((c) => c + 1)}
+      />
+      {selectedModel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+          onClick={() => setSelectedModel(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl"
+              onClick={() => setSelectedModel(null)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h3 className="font-bold text-lg mb-4 text-blue-700 flex items-center gap-2">
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" className="inline" viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 7l9 6 9-6" />
+              </svg>
+              Edit Model Components: <span className="ml-2">{selectedModel.name}</span>
+            </h3>
+            <ModelComponentEditor
+              model={selectedModel}
+              refreshModels={() => setRefreshModels((c) => c + 1)}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderSection = () => {
     switch (activeSection) {
       case "dashboard":
@@ -133,7 +174,7 @@ const AdminPanel = () => {
       case "showerTypes":
         return <ShowerTypeManager />;
       case "models":
-        return <ModelManager />;
+        return renderModelsWithEditor();
       case "glassTypes":
         return <GlassTypeManager />;
       case "glassPricing":
@@ -146,8 +187,8 @@ const AdminPanel = () => {
         return <HardwareTypeManager />;
       case "hardwarePricing":
         return <HardwarePricingManager />;
-      case "gasketPricing":
-        return <GasketPricingManager />;
+      case "sealTypes":
+        return <SealTypeManager />;
       case "sealPricing":
         return <SealPricingManager />;
       case "addons":
