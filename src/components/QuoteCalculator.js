@@ -6,22 +6,21 @@ import html2canvas from 'html2canvas';
 
 const DEFAULT_HARDWARE_TYPE = "Hardware Type 1";
 
-// Helper: get model image URL from models and selected model id
-const getModelImageUrl = (models = [], showerTypes = [], selectedModelId, selectedShowerTypeId) => {
-  let model = null;
-  if (selectedShowerTypeId) {
-    const filtered = models.filter((m) => String(m.shower_type_id) === String(selectedShowerTypeId));
-    model = filtered.find((m) => String(m.id) === String(selectedModelId));
-  }
-  if (!model) {
-    model = models.find((m) => String(m.id) === String(selectedModelId));
-  }
-  if (!model) return null;
-  if (!model.image_path) return null;
-  return model.image_path.startsWith('http')
-    ? model.image_path
-    : `/images/models/${model.image_path}`;
-};
+// --- Model selection logic exactly matching ShowerConfigurator ---
+function getPreviewModel({ models, formData }) {
+  const filteredModels = models.filter(
+    (m) => String(m.shower_type_id) === String(formData.showerType)
+  );
+  const selectedModel =
+    filteredModels.find((m) => String(m.id) === String(formData.model)) ||
+    models.find((m) => String(m.id) === String(formData.model));
+  const modelImageUrl = selectedModel?.image_path
+    ? selectedModel.image_path.startsWith('http')
+      ? selectedModel.image_path
+      : `/images/models/${selectedModel.image_path}`
+    : null;
+  return { selectedModel, modelImageUrl };
+}
 
 const QuoteCalculator = ({
   customerInfo,
@@ -73,7 +72,7 @@ const QuoteCalculator = ({
     sealsMatch: [],
   });
 
-  // Image loading for PDF
+  // For image loading into PDF
   const [modelImageLoaded, setModelImageLoaded] = useState(false);
 
   const pdfRef = useRef();
@@ -233,7 +232,7 @@ const QuoteCalculator = ({
     // Pricing formula
     const subtotal = glassPrice + hardwarePrice + sealsPrice + addonsPrice;
     const vat = subtotal * 0.18;
-    const profitMarginPercent = Number(companySettings?.profitMarginPercent) || 20; // Default 20%
+    const profitMarginPercent = Number(companySettings?.profitMarginPercent) || 20;
     const profit = (subtotal + vat) * (profitMarginPercent / 100);
     const total = subtotal + vat + profit;
 
@@ -296,8 +295,7 @@ const QuoteCalculator = ({
   ).filter(([_, q]) => q > 0);
 
   // --- Model Preview image, matched to ShowerConfigurator ---
-  const modelImageUrl = getModelImageUrl(_models, _showerTypes, _formData.model, _formData.showerType);
-  const selectedModel = _models.find((m) => String(m.id) === String(_formData.model));
+  const { selectedModel, modelImageUrl } = getPreviewModel({ models: _models, formData: _formData });
 
   // Preload model image for PDF export
   useEffect(() => {
@@ -310,12 +308,11 @@ const QuoteCalculator = ({
     img.crossOrigin = "anonymous";
     img.src = modelImageUrl;
     img.onload = () => setModelImageLoaded(true);
-    img.onerror = () => setModelImageLoaded(false);
+    img.onerror = () => setModelImageLoaded(true);
   }, [modelImageUrl]);
 
   // PDF Download Handler
   const handleDownloadPDF = async () => {
-    // Only allow PDF if image is loaded (prevents blank image in PDF)
     if (modelImageUrl && !modelImageLoaded) {
       alert("Please wait, the model image is still loading...");
       return;
@@ -345,7 +342,7 @@ const QuoteCalculator = ({
     }, 500);
   };
 
-  // --- CUSTOMER FINAL OUTPUT: Only Display Final Price Card (no model image preview) ---
+  // --- CUSTOMER FINAL OUTPUT: Only Display Final Price Card (NO model image preview) ---
   return (
     <div style={{
       display: "flex",
@@ -377,7 +374,7 @@ const QuoteCalculator = ({
             }}>
           {t('Final Quote') || 'Final Quote'}
         </h2>
-        {/* NO IMAGE PREVIEW HERE */}
+        {/* NO model image preview here! */}
         <div style={{
           display: "flex",
           flexDirection: "column",
@@ -470,7 +467,7 @@ const QuoteCalculator = ({
               />
             </div>
           )}
-          {/* Customer Info */}
+          {/* --- Customer Info --- */}
           {customerInfo?.name && (
             <div style={{
               marginBottom: 16,
@@ -494,7 +491,7 @@ const QuoteCalculator = ({
             </div>
           )}
 
-          {/* Configuration Summary */}
+          {/* --- Configuration Summary --- */}
           <div style={{
             marginBottom: 16,
             padding: 12,
@@ -535,7 +532,7 @@ const QuoteCalculator = ({
                   <span style={{ fontWeight: 500 }}>{t('Glass Area')}:</span> {quote.area.toFixed(2)} m²
                 </p>
               )}
-              {/* --- Seals List, Premium Format --- */}
+              {/* --- Seals Table --- */}
               {selectedSealsList.length > 0 && (
                 <div style={{ marginTop: 8 }}>
                   <span style={{ fontWeight: 500 }}>{t('Seals')}:</span>
@@ -578,7 +575,7 @@ const QuoteCalculator = ({
             </div>
           </div>
 
-          {/* Price Matches */}
+          {/* --- Price Matches --- */}
           {(debugInfo.glassMatch && debugInfo.glassMatch.found) ||
           (debugInfo.hardwareMatch && debugInfo.hardwareMatch.found) ||
           debugInfo.sealsMatch.some((sm) => sm.found) ? (
