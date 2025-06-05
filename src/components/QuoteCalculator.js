@@ -185,36 +185,29 @@ const QuoteCalculator = ({
       }
     }
 
-    // --- SEALS LOGIC (support multiple seals, reflect on selected list) ---
+    // --- SEALS LOGIC (single seal selection, always quantity=1 for quote) ---
     let sealsPrice = 0;
     let sealsMatch = [];
-    const sealSelections =
-      _formData.sealSelections ||
-      (_formData.sealType && _formData.sealQuantity
-        ? { [_formData.sealType]: Number(_formData.sealQuantity) }
-        : {});
-    Object.entries(sealSelections).forEach(([sealTypeId, quantity]) => {
-      if (quantity > 0) {
-        const sealObj = sealPricing.find((s) => String(s.seal_type_id) === String(sealTypeId));
-        if (sealObj) {
-          const price = (parseFloat(sealObj.unit_price) || 0) * quantity;
-          sealsPrice += price;
-          sealsMatch.push({
-            found: true,
-            sealType: _sealTypes.find((st) => String(st.id) === String(sealTypeId))?.name || sealTypeId,
-            unit_price: sealObj.unit_price,
-            quantity,
-            price,
-          });
-        } else {
-          sealsMatch.push({
-            found: false,
-            sealType: _sealTypes.find((st) => String(st.id) === String(sealTypeId))?.name || sealTypeId,
-            quantity,
-          });
-        }
+    if (_formData.sealType) {
+      const sealObj = sealPricing.find((s) => String(s.seal_type_id) === String(_formData.sealType));
+      if (sealObj) {
+        const price = parseFloat(sealObj.unit_price) || 0;
+        sealsPrice = price; // always 1 for quote
+        sealsMatch.push({
+          found: true,
+          sealType: _sealTypes.find((st) => String(st.id) === String(_formData.sealType))?.name || _formData.sealType,
+          unit_price: sealObj.unit_price,
+          quantity: 1,
+          price,
+        });
+      } else {
+        sealsMatch.push({
+          found: false,
+          sealType: _sealTypes.find((st) => String(st.id) === String(_formData.sealType))?.name || _formData.sealType,
+          quantity: 1,
+        });
       }
-    });
+    }
 
     // Add-ons price: sum (quantity × price) for each add-on selected
     let addonsPrice = 0;
@@ -287,28 +280,22 @@ const QuoteCalculator = ({
   };
 
   // --- SEAL SELECTION LIST DISPLAY ---
-  const selectedSealsList = Object.entries(
-    _formData.sealSelections ||
-      (_formData.sealType && _formData.sealQuantity
-        ? { [_formData.sealType]: Number(_formData.sealQuantity) }
-        : {})
-  ).filter(([_, q]) => q > 0);
+  const selectedSealsList = _formData.sealType
+    ? [[_formData.sealType, 1]]
+    : [];
 
   // --- Model Preview image, matched to ShowerConfigurator ---
   const { selectedModel, modelImageUrl } = getPreviewModel({ models: _models, formData: _formData });
 
   // Preload model image for PDF export
   useEffect(() => {
-    if (!modelImageUrl) {
-      setModelImageLoaded(true);
-      return;
-    }
+    if (!modelImageUrl) { setModelImageLoaded(true); return; }
     setModelImageLoaded(false);
     const img = new window.Image();
     img.crossOrigin = "anonymous";
     img.src = modelImageUrl;
     img.onload = () => setModelImageLoaded(true);
-    img.onerror = () => setModelImageLoaded(true);
+    img.onerror = () => setModelImageLoaded(true); // allow PDF even if failed
   }, [modelImageUrl]);
 
   // PDF Download Handler
@@ -532,46 +519,19 @@ const QuoteCalculator = ({
                   <span style={{ fontWeight: 500 }}>{t('Glass Area')}:</span> {quote.area.toFixed(2)} m²
                 </p>
               )}
-              {/* --- Seals Table --- */}
-              {selectedSealsList.length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  <span style={{ fontWeight: 500 }}>{t('Seals')}:</span>
-                  <table style={{ marginLeft: 8, marginTop: 6, fontSize: 13, borderCollapse: 'collapse', width: '90%' }}>
-                    <thead>
-                      <tr style={{ color: "#6b7280" }}>
-                        <th align="left">{t('Type') || 'Type'}</th>
-                        <th align="right">{t('Qty') || 'Qty'}</th>
-                        <th align="right">{t('Unit Price') || 'Unit Price'}</th>
-                        <th align="right">{t('Total') || 'Total'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {debugInfo.sealsMatch && debugInfo.sealsMatch.length > 0 ? (
-                        debugInfo.sealsMatch.map((sm, idx) =>
-                          sm.found ? (
-                            <tr key={idx}>
-                              <td>{sm.sealType}</td>
-                              <td align="right">{sm.quantity}</td>
-                              <td align="right">{formatPrice(sm.unit_price)}</td>
-                              <td align="right">{formatPrice(sm.price)}</td>
-                            </tr>
-                          ) : (
-                            <tr key={idx} style={{ color: "#dc2626" }}>
-                              <td colSpan={4}>
-                                {t('Not found')}: {sm.sealType} (x{sm.quantity})
-                              </td>
-                            </tr>
-                          )
-                        )
-                      ) : (
-                        <tr>
-                          <td colSpan={4}>{t('No seals selected')}</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {/* --- Short Seals Presentation --- */}
+{debugInfo.sealsMatch && debugInfo.sealsMatch.length > 0 && debugInfo.sealsMatch.some(sm => sm.found) && (
+  <p>
+    <span style={{ fontWeight: 500 }}>{t('Seals')}:</span>{' '}
+    {debugInfo.sealsMatch
+      .filter(sm => sm.found)
+      .map((sm) =>
+        `${sm.sealType} (${sm.quantity}) — ${formatPrice(sm.price)}`
+      )
+      .join(', ')
+    }
+  </p>
+)}
             </div>
           </div>
 
